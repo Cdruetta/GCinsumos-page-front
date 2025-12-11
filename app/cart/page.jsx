@@ -8,7 +8,7 @@ import { InputNumber } from 'primereact/inputnumber'
 import { Divider } from 'primereact/divider'
 import { Toast } from 'primereact/toast'
 import { useRef } from 'react'
-import Header from '../../components/Header'
+import Header from '@/components/Header'
 import { useCart } from '@/lib/cart-context'
 import { createOrder } from '@/lib/api'
 

@@ -12,7 +12,7 @@ import { Toast } from 'primereact/toast'
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
 import { Card } from 'primereact/card'
 import { useRef } from 'react'
-import Header from '../../components/Header'
+import Header from '@/components/Header'
 import { getProducts, createProduct, updateProduct, deleteProduct, updateStock } from '@/lib/api'
 
 export default function AdminPage() {

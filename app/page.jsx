@@ -6,8 +6,8 @@ import { Dropdown } from 'primereact/dropdown'
 import { ProgressSpinner } from 'primereact/progressspinner'
 import { Message } from 'primereact/message'
 import { Toast } from 'primereact/toast'
-import Header from '../components/Header'
-import ProductCard from '../components/ProductCard'
+import Header from '@/components/Header'
+import ProductCard from '@/components/ProductCard'
 import { getProducts, getCategories } from '@/lib/api'
 import {
   products as mockProducts,
