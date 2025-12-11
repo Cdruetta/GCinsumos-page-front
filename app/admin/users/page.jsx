@@ -101,7 +101,7 @@ export default function UsersPage() {
     setEditingUser(null)
   }
 
-  const saveUser = () => {
+  const saveUser = async () => {
     if (!formData.username.trim()) {
       toast.current.show({
         severity: 'error',
@@ -131,7 +131,7 @@ export default function UsersPage() {
           })
           return
         }
-        updateUser(editingUser.id, formData)
+        await updateUser(editingUser.id, formData)
         toast.current.show({
           severity: 'success',
           summary: 'Éxito',
@@ -148,7 +148,7 @@ export default function UsersPage() {
           })
           return
         }
-        createUser(formData.username, formData.password, formData.role)
+        await createUser(formData.username, formData.password, formData.role)
         toast.current.show({
           severity: 'success',
           summary: 'Éxito',
@@ -156,11 +156,17 @@ export default function UsersPage() {
         })
       }
       hideDialog()
+      // Recargar usuarios desde la API
+      if (usersContext && usersContext.loadUsers) {
+        await usersContext.loadUsers()
+      }
     } catch (error) {
+      console.error('Error al guardar usuario:', error)
+      const errorMessage = error.response?.data?.error || error.message || 'Error al guardar usuario'
       toast.current.show({
         severity: 'error',
         summary: 'Error',
-        detail: 'Error al guardar usuario'
+        detail: errorMessage
       })
     }
   }
@@ -182,24 +188,30 @@ export default function UsersPage() {
     })
   }
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     try {
-      deleteUser(id)
+      await deleteUser(id)
       toast.current.show({
         severity: 'success',
         summary: 'Éxito',
         detail: 'Usuario eliminado correctamente'
       })
+      // Recargar usuarios desde la API
+      if (usersContext && usersContext.loadUsers) {
+        await usersContext.loadUsers()
+      }
     } catch (error) {
+      console.error('Error al eliminar usuario:', error)
+      const errorMessage = error.response?.data?.error || error.message || 'Error al eliminar usuario'
       toast.current.show({
         severity: 'error',
         summary: 'Error',
-        detail: 'Error al eliminar usuario'
+        detail: errorMessage
       })
     }
   }
 
-  const handleToggleStatus = (user) => {
+  const handleToggleStatus = async (user) => {
     if (user.id === currentUser?.id) {
       toast.current.show({
         severity: 'error',
@@ -208,12 +220,26 @@ export default function UsersPage() {
       })
       return
     }
-    toggleUserStatus(user.id)
-    toast.current.show({
-      severity: 'success',
-      summary: 'Éxito',
-      detail: `Usuario ${user.active ? 'desactivado' : 'activado'} correctamente`
-    })
+    try {
+      await toggleUserStatus(user.id)
+      toast.current.show({
+        severity: 'success',
+        summary: 'Éxito',
+        detail: `Usuario ${user.active ? 'desactivado' : 'activado'} correctamente`
+      })
+      // Recargar usuarios desde la API
+      if (usersContext && usersContext.loadUsers) {
+        await usersContext.loadUsers()
+      }
+    } catch (error) {
+      console.error('Error al cambiar estado de usuario:', error)
+      const errorMessage = error.response?.data?.error || error.message || 'Error al cambiar estado'
+      toast.current.show({
+        severity: 'error',
+        summary: 'Error',
+        detail: errorMessage
+      })
+    }
   }
 
   const roleBodyTemplate = (rowData) => {

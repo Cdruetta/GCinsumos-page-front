@@ -325,7 +325,9 @@ export default function Home() {
                             objectFit: 'cover'
                           }}
                           onError={(e) => {
+                            console.error('Error cargando imagen del producto:', product.name, 'Ruta original:', product.image, 'URL generada:', getImageUrl(product.image))
                             e.target.style.display = 'none'
+                            e.target.onerror = null // Evitar loop infinito
                             const placeholder = e.target.parentElement.querySelector('.image-placeholder')
                             if (!placeholder) {
                               const div = document.createElement('div')
@@ -334,6 +336,9 @@ export default function Home() {
                               div.innerHTML = '<i class="pi pi-image" style="font-size: 3rem;"></i>'
                               e.target.parentElement.appendChild(div)
                             }
+                          }}
+                          onLoad={() => {
+                            console.log('Imagen cargada exitosamente para:', product.name, 'URL:', getImageUrl(product.image))
                           }}
                         />
                       ) : (

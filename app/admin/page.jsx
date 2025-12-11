@@ -22,6 +22,26 @@ import { getProducts, createProduct, updateProduct, deleteProduct, updateStock }
 
 const PRODUCT_CATEGORIES = categories.filter(cat => cat !== 'Todos')
 
+// Función helper para obtener la URL completa de la imagen
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return '/placeholder.svg'
+  
+  // Si ya es una URL completa (http/https), usarla directamente
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath
+  }
+  
+  // Si es una ruta relativa que empieza con /, asumir que está en el backend
+  if (imagePath.startsWith('/')) {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+    return `${API_URL}${imagePath}`
+  }
+  
+  // Si es una ruta relativa sin /, agregar / y usar el backend
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+  return `${API_URL}/${imagePath}`
+}
+
 export default function AdminPage() {
   const router = useRouter()
   const { isAuthenticated, logout, hasPermission, mounted } = useAuth()
@@ -309,7 +329,7 @@ export default function AdminPage() {
                 className="p-button-outlined p-button-danger"
                 onClick={() => {
                   logout()
-                  router.push('/admin/login')
+                  router.push('/')
                 }}
                 style={{ whiteSpace: 'nowrap' }}
               />
@@ -611,7 +631,7 @@ export default function AdminPage() {
               {formData.image && (
                 <div style={{ marginTop: '0.5rem' }}>
                   <img 
-                    src={formData.image} 
+                    src={getImageUrl(formData.image)} 
                     alt="Vista previa" 
                     style={{ 
                       maxWidth: '100%', 
@@ -621,7 +641,12 @@ export default function AdminPage() {
                       objectFit: 'cover'
                     }}
                     onError={(e) => {
+                      console.error('Error cargando imagen de vista previa:', formData.image, 'URL generada:', getImageUrl(formData.image))
                       e.target.style.display = 'none'
+                      e.target.onerror = null // Evitar loop infinito
+                    }}
+                    onLoad={() => {
+                      console.log('Imagen cargada exitosamente:', getImageUrl(formData.image))
                     }}
                   />
                 </div>

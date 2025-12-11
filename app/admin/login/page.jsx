@@ -80,7 +80,7 @@ export default function LoginPage() {
     await new Promise(resolve => setTimeout(resolve, 500))
 
     try {
-      const success = login(username.trim(), password)
+      const success = await login(username.trim(), password)
       
       if (success) {
         setAttempts(0)

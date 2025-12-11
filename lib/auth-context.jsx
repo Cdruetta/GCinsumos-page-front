@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from "react"
 import { UsersContext } from "./users-context"
+import { verifyUser } from "./api"
 
 const AUTH_STORAGE_KEY = "gcinsumos_admin_auth"
 const AUTH_USER_KEY = "gcinsumos_admin_user"
@@ -119,9 +120,25 @@ export function AuthProvider({ children }) {
     return () => clearInterval(interval)
   }, [isAuthenticated])
 
-  const login = (username, password) => {
+  const login = async (username, password) => {
     try {
-      // Primero intentar con el sistema de usuarios
+      // Primero intentar con la API
+      try {
+        const user = await verifyUser(username, password)
+        if (user) {
+          setIsAuthenticated(true)
+          setCurrentUser(user)
+          const timestamp = Date.now().toString()
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(true))
+          localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user))
+          localStorage.setItem(AUTH_TIMESTAMP_KEY, timestamp)
+          return true
+        }
+      } catch (apiError) {
+        console.log("Error al verificar con API, intentando con usuarios locales:", apiError)
+      }
+
+      // Fallback a verificación local (para compatibilidad)
       if (usersContext && usersContext.mounted) {
         const user = usersContext.verifyPassword(username, password)
         if (user) {

@@ -12,6 +12,26 @@ import Header from '../../components/Header'
 import { useCart } from '@/lib/cart-context'
 import { createOrder } from '@/lib/api'
 
+// Función helper para obtener la URL completa de la imagen
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return '/placeholder.svg'
+  
+  // Si ya es una URL completa (http/https), usarla directamente
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath
+  }
+  
+  // Si es una ruta relativa que empieza con /, asumir que está en el backend
+  if (imagePath.startsWith('/')) {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+    return `${API_URL}${imagePath}`
+  }
+  
+  // Si es una ruta relativa sin /, agregar / y usar el backend
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+  return `${API_URL}/${imagePath}`
+}
+
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart()
   const [processing, setProcessing] = useState(false)
@@ -90,9 +110,14 @@ export default function CartPage() {
               <Card key={item.id} style={{ marginBottom: '1rem' }}>
                 <div className="cart-item-grid" style={{ display: 'grid', gridTemplateColumns: '100px 1fr auto', gap: '1rem', alignItems: 'center' }}>
                   <img
-                    src={item.image || '/placeholder.svg'}
+                    src={getImageUrl(item.image)}
                     alt={item.name}
                     style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
+                    onError={(e) => {
+                      console.error('Error cargando imagen:', item.image, 'URL generada:', getImageUrl(item.image))
+                      e.target.src = '/placeholder.svg'
+                      e.target.onerror = null // Evitar loop infinito
+                    }}
                   />
 
                   <div>

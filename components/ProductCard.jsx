@@ -47,7 +47,12 @@ export default function ProductCard({ product }) {
                     transition: 'transform 0.4s ease'
                 }}
                 onError={(e) => {
+                    console.error('Error cargando imagen del producto:', product.name, 'Ruta original:', product.image, 'URL generada:', getImageUrl(product.image))
                     e.target.src = '/placeholder.svg'
+                    e.target.onerror = null // Evitar loop infinito
+                }}
+                onLoad={() => {
+                    console.log('Imagen cargada exitosamente para:', product.name, 'URL:', getImageUrl(product.image))
                 }}
                 onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'scale(1.1)'
