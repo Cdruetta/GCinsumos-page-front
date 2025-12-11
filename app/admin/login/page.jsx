@@ -16,9 +16,14 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [attempts, setAttempts] = useState(0)
   const [locked, setLocked] = useState(false)
+  const [showCredentials, setShowCredentials] = useState(false)
   const router = useRouter()
   const { login, isAuthenticated } = useAuth()
   const toast = useRef(null)
+
+  // Credenciales por defecto
+  const defaultUsername = process.env.NEXT_PUBLIC_ADMIN_USERNAME || "neondb_owner"
+  const defaultPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "npg_WKSC8uHL5xeB"
 
   // Redirigir si ya está autenticado
   useEffect(() => {
@@ -182,6 +187,102 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {/* Panel de credenciales por defecto */}
+        <div style={{
+          marginBottom: '1.5rem',
+          padding: '1rem',
+          background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
+          borderRadius: '12px',
+          border: '1px solid rgba(255, 122, 0, 0.2)'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '0.75rem',
+            cursor: 'pointer'
+          }}
+          onClick={() => setShowCredentials(!showCredentials)}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <i className="pi pi-info-circle" style={{ color: '#ff7a00', fontSize: '1rem' }}></i>
+              <span style={{ fontWeight: '600', color: '#1e293b', fontSize: '0.9rem' }}>
+                Credenciales por defecto
+              </span>
+            </div>
+            <i className={`pi ${showCredentials ? 'pi-chevron-up' : 'pi-chevron-down'}`} style={{ color: '#ff7a00' }}></i>
+          </div>
+          {showCredentials && (
+            <div style={{
+              paddingTop: '0.75rem',
+              borderTop: '1px solid rgba(255, 122, 0, 0.2)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.5rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: '500' }}>Usuario:</span>
+                <code style={{
+                  background: '#fff',
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '6px',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  color: '#ff7a00',
+                  border: '1px solid rgba(255, 122, 0, 0.2)'
+                }}>
+                  {defaultUsername}
+                </code>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: '500' }}>Contraseña:</span>
+                <code style={{
+                  background: '#fff',
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '6px',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  color: '#ff7a00',
+                  border: '1px solid rgba(255, 122, 0, 0.2)'
+                }}>
+                  {defaultPassword}
+                </code>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername(defaultUsername)
+                  setPassword(defaultPassword)
+                  setShowCredentials(false)
+                }}
+                style={{
+                  marginTop: '0.5rem',
+                  padding: '0.5rem',
+                  background: 'linear-gradient(135deg, #ff7a00, #ff9f4d)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 122, 0, 0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              >
+                <i className="pi pi-copy" style={{ marginRight: '0.5rem' }}></i>
+                Usar estas credenciales
+              </button>
+            </div>
+          )}
+        </div>
+
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1.5rem' }}>
             <label htmlFor="username" style={{
@@ -297,9 +398,13 @@ export default function LoginPage() {
           marginTop: '2rem',
           paddingTop: '1.5rem',
           borderTop: '1px solid #e2e8f0',
-          textAlign: 'center'
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem',
+          alignItems: 'center'
         }}>
           <button
+            type="button"
             onClick={() => router.push('/')}
             style={{
               background: 'transparent',
@@ -307,11 +412,30 @@ export default function LoginPage() {
               color: '#64748b',
               cursor: 'pointer',
               fontSize: '0.875rem',
-              textDecoration: 'underline'
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'color 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#ff7a00'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#64748b'
             }}
           >
+            <i className="pi pi-arrow-left"></i>
             Volver al inicio
           </button>
+          <p style={{
+            fontSize: '0.75rem',
+            color: '#94a3b8',
+            textAlign: 'center',
+            margin: 0
+          }}>
+            ¿Olvidaste tus credenciales? Contacta al administrador del sistema.
+          </p>
         </div>
       </Card>
     </div>

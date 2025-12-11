@@ -1,78 +1,41 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { InputText } from 'primereact/inputtext'
-import { Dropdown } from 'primereact/dropdown'
+import { useRouter } from 'next/navigation'
 import { ProgressSpinner } from 'primereact/progressspinner'
 import { Message } from 'primereact/message'
 import { Toast } from 'primereact/toast'
+import { Carousel } from 'primereact/carousel'
 import Header from '../components/Header'
-import ProductCard from '../components/ProductCard'
-import { getProducts, getCategories } from '@/lib/api'
-import {
-  products as mockProducts,
-  categories as mockCategories,
-  getProductsByCategory,
-  searchProducts
-} from '@/lib/products-data'
+import { getProducts } from '@/lib/api'
+import { products as mockProducts } from '@/lib/products-data'
 
 export default function Home() {
+  const router = useRouter()
   const [products, setProducts] = useState([])
-  const [categories, setCategories] = useState([])
-  const [selectedCategory, setSelectedCategory] = useState('Todos')
-  const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [fallbackUsed, setFallbackUsed] = useState(false)
   const toastRef = useRef(null)
 
   useEffect(() => {
-    loadCategories()
     loadProducts()
   }, [])
-
-  useEffect(() => {
-    loadProducts()
-  }, [selectedCategory, searchQuery])
-
-  const loadCategories = async () => {
-    try {
-      const data = await getCategories()
-      setCategories(data)
-    } catch (err) {
-      console.error('Error al cargar categorías:', err)
-      setCategories(mockCategories)
-    }
-  }
 
   const loadProducts = async () => {
     try {
       setLoading(true)
-      const filters = {
-        category: selectedCategory,
-        search: searchQuery
-      }
-      const data = await getProducts(filters)
+      const data = await getProducts({})
       setProducts(data)
-      setError(null)
       setFallbackUsed(false)
     } catch (err) {
       console.error('Error al cargar productos:', err)
       // Fallback a datos mock locales
-      let fallback = mockProducts
-      if (filters.category && filters.category !== 'Todos') {
-        fallback = getProductsByCategory(filters.category)
-      }
-      if (filters.search) {
-        fallback = searchProducts(filters.search)
-      }
-      setProducts(fallback)
-      setError('No pudimos contactar el backend, mostrando datos de ejemplo.')
+      setProducts(mockProducts)
       setFallbackUsed(true)
       toastRef.current?.show({
         severity: 'warn',
         summary: 'Modo sin conexión',
-        detail: 'Mostrando catálogo de ejemplo mientras el backend no responde.',
+        detail: 'Mostrando productos de ejemplo mientras el backend no responde.',
         life: 4000
       })
     } finally {
@@ -177,10 +140,7 @@ export default function Home() {
             </p>
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
               <button
-                onClick={() => {
-                  setSelectedCategory('Todos')
-                  document.querySelector('#search')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                }}
+                onClick={() => router.push('/catalog')}
                 style={{
                   padding: '0.875rem 1.75rem',
                   borderRadius: '14px',
@@ -202,32 +162,7 @@ export default function Home() {
                   e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'
                 }}
               >
-                Ver catálogo
-              </button>
-              <button
-                onClick={() => setSelectedCategory('Laptops')}
-                style={{
-                  padding: '0.875rem 1.75rem',
-                  borderRadius: '14px',
-                  border: '2px solid rgba(255,255,255,0.8)',
-                  background: 'rgba(255,255,255,0.1)',
-                  backdropFilter: 'blur(10px)',
-                  color: '#fff',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontSize: '1rem',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.2)'
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
-                  e.currentTarget.style.transform = 'translateY(0)'
-                }}
-              >
-                Laptops destacadas
+                Ver catálogo completo
               </button>
             </div>
             {fallbackUsed && (
@@ -246,174 +181,215 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Filters */}
-        <div 
-          className="fade-in-up filters-container"
-          style={{ 
-            display: 'grid', 
-            gridTemplateColumns: '1fr 1fr', 
-            gap: '1.5rem', 
-            marginBottom: '2.5rem',
-            padding: '1.75rem',
-            background: '#fff',
-            borderRadius: '16px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)'
-          }}
-        >
-          <div>
-            <label htmlFor="search" style={{ 
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              marginBottom: '0.75rem', 
-              fontWeight: '700',
-              color: '#1e293b',
-              fontSize: '0.95rem'
-            }}>
-              <i className="pi pi-search" style={{ color: '#ff7a00' }}></i>
-              Buscar Productos
-            </label>
-            <div style={{ position: 'relative' }}>
-              <i className="pi pi-search" style={{ 
-                position: 'absolute',
-                left: '1rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#64748b',
-                zIndex: 1
-              }}></i>
-              <InputText
-                id="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Busca por nombre, descripción o categoría..."
-                style={{ 
-                  width: '100%',
-                  borderRadius: '12px',
-                  border: '2px solid #e2e8f0',
-                  padding: '0.75rem 1rem 0.75rem 2.75rem',
-                  fontSize: '1rem',
-                  transition: 'all 0.3s ease'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#ff7a00'
-                  e.target.style.boxShadow = '0 0 0 3px rgba(255, 122, 0, 0.1)'
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#e2e8f0'
-                  e.target.style.boxShadow = 'none'
-                }}
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  style={{
-                    position: 'absolute',
-                    right: '0.75rem',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'transparent',
-                    border: 'none',
-                    color: '#64748b',
-                    cursor: 'pointer',
-                    padding: '0.25rem',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#f1f5f9'
-                    e.currentTarget.style.color = '#ff7a00'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent'
-                    e.currentTarget.style.color = '#64748b'
-                  }}
-                >
-                  <i className="pi pi-times" style={{ fontSize: '0.875rem' }}></i>
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="category" style={{ 
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              marginBottom: '0.75rem', 
-              fontWeight: '700',
-              color: '#1e293b',
-              fontSize: '0.95rem'
-            }}>
-              <i className="pi pi-filter" style={{ color: '#ff7a00' }}></i>
-              Filtrar por Categoría
-            </label>
-            <Dropdown
-              id="category"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.value)}
-              options={categories.map(cat => ({ label: cat, value: cat }))}
-              placeholder="Todas las categorías"
-              style={{ 
-                width: '100%',
-                borderRadius: '12px',
-                border: '2px solid #e2e8f0',
-                transition: 'all 0.3s ease'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#ff7a00'
-                e.target.style.boxShadow = '0 0 0 3px rgba(255, 122, 0, 0.1)'
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#e2e8f0'
-                e.target.style.boxShadow = 'none'
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Products Grid */}
-        {error && (
-          <Message severity="error" text={error} style={{ marginBottom: '1rem', width: '100%' }} />
-        )}
+        {/* Products Carousel */}
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '4rem' }}>
             <ProgressSpinner style={{ width: '50px', height: '50px' }} />
           </div>
         ) : products.length > 0 ? (
-          <>
+          <div className="fade-in-up" style={{ marginBottom: '2rem' }}>
             <div style={{ 
               marginBottom: '1.5rem',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem'
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1rem'
             }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <i className="pi pi-images" style={{ fontSize: '1.25rem', color: '#ff7a00' }}></i>
+                <h2 style={{ 
+                  fontSize: '1.5rem', 
+                  fontWeight: 700,
+                  color: '#1e293b',
+                  margin: 0
+                }}>
+                  Productos Destacados
+                </h2>
+              </div>
               <span style={{ 
-                fontSize: '1rem', 
+                fontSize: '0.95rem', 
                 color: '#64748b',
-                fontWeight: 600
+                fontWeight: 500
               }}>
-                Mostrando {products.length} {products.length === 1 ? 'artículo' : 'artículos'}
+                {products.length} {products.length === 1 ? 'producto' : 'productos'}
               </span>
             </div>
-            <div className="grid grid-cols-3">
-              {products.map((product, index) => (
-                <div 
-                  key={product.id}
-                  style={{ 
-                    animationDelay: `${index * 0.1}s`,
-                    animation: 'fadeInUp 0.6s ease-out forwards'
-                  }}
-                >
-                  <ProductCard product={product} />
-                </div>
-              ))}
+            
+            <div style={{
+              background: '#fff',
+              borderRadius: '20px',
+              padding: '2rem',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(255, 122, 0, 0.1)'
+            }}>
+              <Carousel
+                value={products.filter(p => p.image)} // Solo productos con imagen
+                numVisible={3}
+                numScroll={1}
+                responsiveOptions={[
+                  {
+                    breakpoint: '1024px',
+                    numVisible: 2,
+                    numScroll: 1
+                  },
+                  {
+                    breakpoint: '768px',
+                    numVisible: 1,
+                    numScroll: 1
+                  }
+                ]}
+                itemTemplate={(product) => (
+                  <div
+                    key={product.id}
+                    style={{
+                      padding: '0.75rem',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column'
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: 'relative',
+                        width: '100%',
+                        paddingTop: '75%', // Aspect ratio 4:3
+                        background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)',
+                        borderRadius: '16px',
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                        marginBottom: '1rem'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-4px)'
+                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(255, 122, 0, 0.2)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)'
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)'
+                      }}
+                      onClick={() => {
+                        // Navegar al catálogo con filtros aplicados
+                        router.push(`/catalog?category=${encodeURIComponent(product.category)}&search=${encodeURIComponent(product.name)}`)
+                      }}
+                    >
+                      {product.image ? (
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                        />
+                      ) : (
+                        <div style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#94a3b8'
+                        }}>
+                          <i className="pi pi-image" style={{ fontSize: '3rem' }}></i>
+                        </div>
+                      )}
+                      {/* Badge de categoría */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '0.75rem',
+                        right: '0.75rem',
+                        background: 'linear-gradient(135deg, #ff7a00, #ff9f4d)',
+                        color: '#fff',
+                        padding: '0.375rem 0.75rem',
+                        borderRadius: '20px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
+                      }}>
+                        {product.category}
+                      </div>
+                      {/* Badge de stock */}
+                      {product.stock > 0 && (
+                        <div style={{
+                          position: 'absolute',
+                          bottom: '0.75rem',
+                          left: '0.75rem',
+                          background: 'rgba(255, 255, 255, 0.95)',
+                          backdropFilter: 'blur(10px)',
+                          padding: '0.375rem 0.75rem',
+                          borderRadius: '20px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          color: '#059669',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                        }}>
+                          <i className="pi pi-check-circle" style={{ fontSize: '0.75rem' }}></i>
+                          En stock
+                        </div>
+                      )}
+                    </div>
+                    {/* Información del producto */}
+                    <div style={{ padding: '0 0.5rem' }}>
+                      <h3 style={{
+                        fontSize: '1rem',
+                        fontWeight: 700,
+                        color: '#1e293b',
+                        marginBottom: '0.5rem',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {product.name}
+                      </h3>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '0.5rem'
+                      }}>
+                        <span style={{
+                          fontSize: '1.25rem',
+                          fontWeight: 800,
+                          background: 'linear-gradient(135deg, #ff7a00, #ff9f4d)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent'
+                        }}>
+                          ${product.price?.toLocaleString('es-AR') || '0'}
+                        </span>
+                        {product.stock > 0 && (
+                          <span style={{
+                            fontSize: '0.875rem',
+                            color: '#64748b',
+                            fontWeight: 500
+                          }}>
+                            {product.stock} disponibles
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                autoplayInterval={4000}
+                circular
+                showIndicators={true}
+                showNavigators={true}
+              />
             </div>
-          </>
+          </div>
         ) : (
           <div 
             className="fade-in-up"

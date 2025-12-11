@@ -163,6 +163,34 @@ export default function Header() {
               <span className="menu-text">Inicio</span>
             </button>
             <button
+              onClick={() => router.push('/catalog')}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#1e293b',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '8px',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#f1f5f9'
+                e.currentTarget.style.color = '#ff7a00'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent'
+                e.currentTarget.style.color = '#1e293b'
+              }}
+            >
+              <i className="pi pi-th-large" style={{ fontSize: '1rem' }}></i>
+              <span className="menu-text">Catálogo</span>
+            </button>
+            <button
               onClick={handleAdminClick}
               style={{
                 background: 'transparent',
@@ -250,6 +278,70 @@ export default function Header() {
               fontWeight: 600,
               fontSize: '0.95rem',
               cursor: 'pointer',
+              padding: '0.75rem 1rem',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              transition: 'all 0.2s ease',
+              textAlign: 'left'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#f1f5f9'
+              e.currentTarget.style.color = '#ff7a00'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = '#1e293b'
+            }}
+          >
+            <i className="pi pi-home" style={{ fontSize: '1rem' }}></i>
+            <span>Inicio</span>
+          </button>
+          <button
+            onClick={() => {
+              router.push('/catalog')
+              setMobileMenuOpen(false)
+            }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#1e293b',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              cursor: 'pointer',
+              padding: '0.75rem 1rem',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              transition: 'all 0.2s ease',
+              textAlign: 'left'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#f1f5f9'
+              e.currentTarget.style.color = '#ff7a00'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = '#1e293b'
+            }}
+          >
+            <i className="pi pi-th-large" style={{ fontSize: '1rem' }}></i>
+            <span>Catálogo</span>
+          </button>
+          <button
+            onClick={() => {
+              handleAdminClick()
+              setMobileMenuOpen(false)
+            }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#1e293b',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              cursor: 'pointer',
               padding: '0.75rem',
               borderRadius: '8px',
               textAlign: 'left',
@@ -270,6 +362,39 @@ export default function Header() {
           >
             <i className="pi pi-home" style={{ fontSize: '1rem' }}></i>
             <span>Inicio</span>
+          </button>
+          <button
+            onClick={() => {
+              router.push('/catalog')
+              setMobileMenuOpen(false)
+            }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#1e293b',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              cursor: 'pointer',
+              padding: '0.75rem',
+              borderRadius: '8px',
+              textAlign: 'left',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.3s ease',
+              width: '100%'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#f1f5f9'
+              e.currentTarget.style.color = '#ff7a00'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = '#1e293b'
+            }}
+          >
+            <i className="pi pi-th-large" style={{ fontSize: '1rem' }}></i>
+            <span>Catálogo</span>
           </button>
           <button
             onClick={() => {
