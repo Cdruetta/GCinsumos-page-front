@@ -2,22 +2,50 @@
 
 import { createContext, useContext, useState, useEffect } from "react"
 
+const CART_STORAGE_KEY = "gcinsumos_cart_items"
 const CartContext = createContext()
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([])
   const [mounted, setMounted] = useState(false)
 
+  // Hidrata el carrito desde localStorage en el cliente
   useEffect(() => {
     setMounted(true)
+    try {
+      const stored = localStorage.getItem(CART_STORAGE_KEY)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (Array.isArray(parsed)) {
+          setCartItems(parsed)
+        }
+      }
+    } catch (error) {
+      console.error("No se pudo leer el carrito almacenado", error)
+    }
   }, [])
 
+  // Persiste los cambios del carrito
+  useEffect(() => {
+    if (!mounted) return
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems))
+    } catch (error) {
+      console.error("No se pudo guardar el carrito", error)
+    }
+  }, [cartItems, mounted])
+
   const addToCart = (product) => {
+    const maxStock = Number.isFinite(product?.stock) ? product.stock : Infinity
     setCartItems((prevItems) => {
       const existingItem = prevItems.find((item) => item.id === product.id)
       if (existingItem) {
-        return prevItems.map((item) => (item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item))
+        const nextQty = Math.min(existingItem.quantity + 1, maxStock)
+        return prevItems.map((item) =>
+          item.id === product.id ? { ...item, quantity: nextQty } : item,
+        )
       }
+      if (maxStock <= 0) return prevItems
       return [...prevItems, { ...product, quantity: 1 }]
     })
   }
@@ -31,7 +59,14 @@ export function CartProvider({ children }) {
       removeFromCart(productId)
       return
     }
-    setCartItems((prevItems) => prevItems.map((item) => (item.id === productId ? { ...item, quantity } : item)))
+    setCartItems((prevItems) =>
+      prevItems.map((item) => {
+        if (item.id !== productId) return item
+        const maxStock = Number.isFinite(item?.stock) ? item.stock : Infinity
+        const nextQty = Math.min(quantity, maxStock)
+        return { ...item, quantity: nextQty }
+      }),
+    )
   }
 
   const clearCart = () => {
