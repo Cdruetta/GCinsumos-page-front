@@ -60,3 +60,28 @@ coverage/
 # TypeScript
 # ======================================
 *.tsbuildinfo
+# ======================================
+# Cursor IDE metadata
+# ======================================
+.cursor/
+.cursorrules
+.cursorrules.md
+.cursorrules.txt
+.cursorrules.yml
+.cursorrules.yaml
+.cursorrules.yml
+# ======================================
+# Binary files
+# ======================================
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+*.bz2
+*.xz
+*.wim
+*.iso
+*.img
+*.vhdx
+*.vhdx
