@@ -20,7 +20,7 @@ import { useUsers, ROLES } from '@/lib/users-context'
 export default function UsersPage() {
   const router = useRouter()
   const { isAuthenticated, currentUser, hasPermission, mounted } = useAuth()
-  const { users, createUser, updateUser, deleteUser, toggleUserStatus, mounted: usersMounted } = useUsers()
+  const { users, createUser, updateUser, deleteUser, toggleUserStatus, loadUsers, mounted: usersMounted } = useUsers()
   const [loading, setLoading] = useState(true)
   const [dialogVisible, setDialogVisible] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
@@ -157,16 +157,41 @@ export default function UsersPage() {
       }
       hideDialog()
       // Recargar usuarios desde la API
-      if (usersContext && usersContext.loadUsers) {
-        await usersContext.loadUsers()
+      if (loadUsers) {
+        await loadUsers()
       }
     } catch (error) {
       console.error('Error al guardar usuario:', error)
-      const errorMessage = error.response?.data?.error || error.message || 'Error al guardar usuario'
+      console.error('Error completo:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      })
+      
+      let errorMessage = 'Error al guardar usuario'
+      
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+      
+      // Mensajes especiales para errores comunes
+      if (error.response?.data?.code === 'TABLE_NOT_EXISTS') {
+        errorMessage = '⚠️ La base de datos no está configurada. Ejecuta la migración en el backend: npx prisma migrate dev'
+      } else if (error.response?.data?.code === 'SCHEMA_MISMATCH') {
+        errorMessage = '⚠️ La estructura de la base de datos no coincide. Ejecuta: npx prisma db push'
+      } else if (error.response?.data?.code === 'DB_CONNECTION_ERROR') {
+        errorMessage = '⚠️ No se puede conectar a la base de datos. Verifica que el backend esté corriendo.'
+      } else if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        errorMessage = '⚠️ No se puede conectar al servidor. Verifica que el backend esté corriendo en ' + (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000')
+      }
+      
       toast.current.show({
         severity: 'error',
         summary: 'Error',
-        detail: errorMessage
+        detail: errorMessage,
+        life: 8000
       })
     }
   }
@@ -197,8 +222,8 @@ export default function UsersPage() {
         detail: 'Usuario eliminado correctamente'
       })
       // Recargar usuarios desde la API
-      if (usersContext && usersContext.loadUsers) {
-        await usersContext.loadUsers()
+      if (loadUsers) {
+        await loadUsers()
       }
     } catch (error) {
       console.error('Error al eliminar usuario:', error)
@@ -228,8 +253,8 @@ export default function UsersPage() {
         detail: `Usuario ${user.active ? 'desactivado' : 'activado'} correctamente`
       })
       // Recargar usuarios desde la API
-      if (usersContext && usersContext.loadUsers) {
-        await usersContext.loadUsers()
+      if (loadUsers) {
+        await loadUsers()
       }
     } catch (error) {
       console.error('Error al cambiar estado de usuario:', error)

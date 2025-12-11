@@ -69,6 +69,7 @@ export function UsersProvider({ children }) {
 
   const createUser = async (username, password, role) => {
     try {
+      console.log('Intentando crear usuario:', { username, role })
       const newUser = await createUserAPI({
         username: username.trim(),
         password: password.trim(),
@@ -76,6 +77,7 @@ export function UsersProvider({ children }) {
         active: true
       })
       
+      console.log('Usuario creado exitosamente:', newUser)
       setUsers(prev => [...prev, newUser])
       
       // Actualizar localStorage como backup
@@ -91,6 +93,12 @@ export function UsersProvider({ children }) {
       return newUser
     } catch (error) {
       console.error("Error al crear usuario:", error)
+      console.error("Detalles del error:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText
+      })
       throw error
     }
   }
