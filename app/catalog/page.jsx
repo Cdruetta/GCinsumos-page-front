@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { InputText } from 'primereact/inputtext'
 import { Dropdown } from 'primereact/dropdown'
@@ -17,7 +17,7 @@ import {
   searchProducts
 } from '@/lib/products-data'
 
-export default function CatalogPage() {
+function CatalogContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [products, setProducts] = useState([])
@@ -377,3 +377,17 @@ export default function CatalogPage() {
   )
 }
 
+export default function CatalogPage() {
+  return (
+    <Suspense fallback={
+      <div>
+        <Header />
+        <div className="container" style={{ textAlign: 'center', padding: '4rem' }}>
+          <ProgressSpinner style={{ width: '50px', height: '50px' }} />
+        </div>
+      </div>
+    }>
+      <CatalogContent />
+    </Suspense>
+  )
+}
