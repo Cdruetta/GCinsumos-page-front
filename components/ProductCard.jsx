@@ -10,8 +10,26 @@ import { useCart } from '@/lib/cart-context'
 const getImageUrl = (imagePath) => {
   if (!imagePath) return '/placeholder.svg'
   
-  // Si ya es una URL completa (http/https), usarla directamente
+  // Si ya es una URL completa (http/https), validar que sea una imagen
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    // Verificar que no sea una URL de página HTML
+    // Las URLs de imágenes suelen tener extensiones de imagen o rutas específicas
+    const isImageUrl = imagePath.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)(\?|#|$)/i) ||
+                      imagePath.includes('/image/') ||
+                      imagePath.includes('/img/') ||
+                      imagePath.includes('/uploads/') ||
+                      imagePath.includes('/media/') ||
+                      imagePath.includes('/assets/') ||
+                      imagePath.includes('i.imgur.com') ||
+                      imagePath.includes('res.cloudinary.com')
+    
+    // Si tiene ? o # y no parece ser una imagen, probablemente es una página web
+    if ((imagePath.includes('?') || imagePath.includes('#')) && !isImageUrl) {
+      console.warn('⚠️ URL parece ser una página web, no una imagen:', imagePath)
+      console.warn('💡 Necesitas la URL directa de la imagen. Ver: COMO_OBTENER_URL_IMAGEN.md')
+      return '/placeholder.svg'
+    }
+    
     return imagePath
   }
   

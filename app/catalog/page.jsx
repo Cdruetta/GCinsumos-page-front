@@ -35,6 +35,7 @@ function CatalogContent() {
 
   useEffect(() => {
     loadProducts()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, searchQuery])
 
   const loadCategories = async () => {
@@ -55,6 +56,7 @@ function CatalogContent() {
         search: searchQuery
       }
       const data = await getProducts(filters)
+      // Solo actualizar si hay datos o si realmente cambió
       setProducts(data)
       setError(null)
       setFallbackUsed(false)
