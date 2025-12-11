@@ -73,14 +73,31 @@ function CatalogContent() {
         fallback = searchProducts(filters.search)
       }
       setProducts(fallback)
-      setError('No pudimos contactar el backend, mostrando datos de ejemplo.')
+      
+      // Detectar si es un error de CORS
+      const isCorsError = err.code === 'ERR_NETWORK' || 
+                         err.message?.includes('CORS') ||
+                         err.message === 'Network Error'
+      
+      if (isCorsError) {
+        setError('Error de CORS: El backend no permite solicitudes desde este origen. Verifica la configuración de CORS en el backend.')
+        toastRef.current?.show({
+          severity: 'error',
+          summary: 'Error de CORS',
+          detail: 'El backend necesita actualizar su configuración de CORS para permitir solicitudes desde https://gcinsumos-page-front.onrender.com',
+          life: 6000
+        })
+      } else {
+        setError('No pudimos contactar el backend, mostrando datos de ejemplo.')
+        toastRef.current?.show({
+          severity: 'warn',
+          summary: 'Modo sin conexión',
+          detail: 'Mostrando catálogo de ejemplo mientras el backend no responde.',
+          life: 4000
+        })
+      }
+      
       setFallbackUsed(true)
-      toastRef.current?.show({
-        severity: 'warn',
-        summary: 'Modo sin conexión',
-        detail: 'Mostrando catálogo de ejemplo mientras el backend no responde.',
-        life: 4000
-      })
     } finally {
       setLoading(false)
     }

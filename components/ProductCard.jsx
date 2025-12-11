@@ -6,6 +6,26 @@ import { Button } from 'primereact/button'
 import { Tag } from 'primereact/tag'
 import { useCart } from '@/lib/cart-context'
 
+// Función helper para obtener la URL completa de la imagen
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return '/placeholder.svg'
+  
+  // Si ya es una URL completa (http/https), usarla directamente
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath
+  }
+  
+  // Si es una ruta relativa que empieza con /, asumir que está en el backend
+  if (imagePath.startsWith('/')) {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+    return `${API_URL}${imagePath}`
+  }
+  
+  // Si es una ruta relativa sin /, agregar / y usar el backend
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+  return `${API_URL}/${imagePath}`
+}
+
 export default function ProductCard({ product }) {
     const { addToCart } = useCart()
     const [isHovered, setIsHovered] = useState(false)
@@ -19,12 +39,15 @@ export default function ProductCard({ product }) {
         }}>
             <img
                 alt={product.name}
-                src={product.image || '/placeholder.svg'}
+                src={getImageUrl(product.image)}
                 style={{ 
                     width: '100%', 
                     height: '240px', 
                     objectFit: 'cover',
                     transition: 'transform 0.4s ease'
+                }}
+                onError={(e) => {
+                    e.target.src = '/placeholder.svg'
                 }}
                 onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'scale(1.1)'

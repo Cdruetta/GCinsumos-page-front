@@ -10,6 +10,26 @@ import Header from '../components/Header'
 import { getProducts } from '@/lib/api'
 import { products as mockProducts } from '@/lib/products-data'
 
+// Función helper para obtener la URL completa de la imagen
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return '/placeholder.svg'
+  
+  // Si ya es una URL completa (http/https), usarla directamente
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath
+  }
+  
+  // Si es una ruta relativa que empieza con /, asumir que está en el backend
+  if (imagePath.startsWith('/')) {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+    return `${API_URL}${imagePath}`
+  }
+  
+  // Si es una ruta relativa sin /, agregar / y usar el backend
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+  return `${API_URL}/${imagePath}`
+}
+
 export default function Home() {
   const router = useRouter()
   const [products, setProducts] = useState([])
@@ -29,15 +49,31 @@ export default function Home() {
       setFallbackUsed(false)
     } catch (err) {
       console.error('Error al cargar productos:', err)
+      
+      // Detectar si es un error de CORS
+      const isCorsError = err.code === 'ERR_NETWORK' || 
+                         err.message?.includes('CORS') ||
+                         err.message === 'Network Error'
+      
       // Fallback a datos mock locales
       setProducts(mockProducts)
       setFallbackUsed(true)
-      toastRef.current?.show({
-        severity: 'warn',
-        summary: 'Modo sin conexión',
-        detail: 'Mostrando productos de ejemplo mientras el backend no responde.',
-        life: 4000
-      })
+      
+      if (isCorsError) {
+        toastRef.current?.show({
+          severity: 'error',
+          summary: 'Error de CORS',
+          detail: 'El backend no permite solicitudes desde este origen. Verifica la configuración de CORS en el backend.',
+          life: 6000
+        })
+      } else {
+        toastRef.current?.show({
+          severity: 'warn',
+          summary: 'Modo sin conexión',
+          detail: 'Mostrando productos de ejemplo mientras el backend no responde.',
+          life: 4000
+        })
+      }
     } finally {
       setLoading(false)
     }
@@ -278,7 +314,7 @@ export default function Home() {
                     >
                       {product.image ? (
                         <img
-                          src={product.image}
+                          src={getImageUrl(product.image)}
                           alt={product.name}
                           style={{
                             position: 'absolute',
@@ -287,6 +323,17 @@ export default function Home() {
                             width: '100%',
                             height: '100%',
                             objectFit: 'cover'
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = 'none'
+                            const placeholder = e.target.parentElement.querySelector('.image-placeholder')
+                            if (!placeholder) {
+                              const div = document.createElement('div')
+                              div.className = 'image-placeholder'
+                              div.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8;'
+                              div.innerHTML = '<i class="pi pi-image" style="font-size: 3rem;"></i>'
+                              e.target.parentElement.appendChild(div)
+                            }
                           }}
                         />
                       ) : (
