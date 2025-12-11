@@ -2,6 +2,8 @@
 
 import { PrimeReactProvider } from 'primereact/api'
 import { CartProvider } from '@/lib/cart-context'
+import { UsersProvider } from '@/lib/users-context'
+import { AuthProvider } from '@/lib/auth-context'
 import 'primereact/resources/themes/lara-light-blue/theme.css'
 import 'primereact/resources/primereact.min.css'
 import 'primeicons/primeicons.css'
@@ -16,9 +18,13 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <PrimeReactProvider>
-          <CartProvider>
-            {children}
-          </CartProvider>
+          <UsersProvider>
+            <AuthProvider>
+              <CartProvider>
+                {children}
+              </CartProvider>
+            </AuthProvider>
+          </UsersProvider>
         </PrimeReactProvider>
       </body>
     </html>

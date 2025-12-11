@@ -83,12 +83,12 @@ export default function CartPage() {
       <div className="container">
         <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>Tu Carrito</h1>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+        <div className="cart-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
           {/* Cart Items */}
           <div>
             {cartItems.map((item) => (
               <Card key={item.id} style={{ marginBottom: '1rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr auto', gap: '1rem', alignItems: 'center' }}>
+                <div className="cart-item-grid" style={{ display: 'grid', gridTemplateColumns: '100px 1fr auto', gap: '1rem', alignItems: 'center' }}>
                   <img
                     src={item.image || '/placeholder.svg'}
                     alt={item.name}
@@ -104,7 +104,7 @@ export default function CartPage() {
                     </p>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+                  <div className="cart-item-actions" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <Button
                         icon="pi pi-minus"

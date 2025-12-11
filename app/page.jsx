@@ -88,7 +88,7 @@ export default function Home() {
       <div className="container">
         {/* Hero Section */}
         <div 
-          className="fade-in-up"
+          className="fade-in-up hero-section"
           style={{
             marginBottom: '3rem',
             padding: '3rem 2.5rem',
@@ -123,22 +123,25 @@ export default function Home() {
             borderRadius: '50%'
           }} />
           
-          <div style={{
-            width: 140,
-            height: 140,
-            borderRadius: '20px',
-            background: '#fff',
-            padding: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-            position: 'relative',
-            zIndex: 1,
-            transition: 'transform 0.3s ease'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05) rotate(2deg)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
+          <div 
+            className="hero-logo"
+            style={{
+              width: 140,
+              height: 140,
+              borderRadius: '20px',
+              background: '#fff',
+              padding: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+              position: 'relative',
+              zIndex: 1,
+              transition: 'transform 0.3s ease',
+              flexShrink: 0
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05) rotate(2deg)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
           >
             <img
               src="/gclogo.png"
@@ -147,23 +150,29 @@ export default function Home() {
             />
           </div>
           <div style={{ flex: 1, position: 'relative', zIndex: 1 }}>
-            <h1 style={{ 
-              fontSize: '3rem', 
-              fontWeight: '900', 
-              marginBottom: '0.75rem',
-              lineHeight: 1.1,
-              textShadow: '0 2px 10px rgba(0,0,0,0.1)',
-              letterSpacing: '-1px'
-            }}>
+            <h1 
+              className="hero-title"
+              style={{ 
+                fontSize: '3rem', 
+                fontWeight: '900', 
+                marginBottom: '0.75rem',
+                lineHeight: 1.1,
+                textShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                letterSpacing: '-1px'
+              }}
+            >
               Monta tu setup soñado
             </h1>
-            <p style={{ 
-              fontSize: '1.2rem', 
-              opacity: 0.95, 
-              marginBottom: '1.5rem',
-              lineHeight: 1.5,
-              fontWeight: 400
-            }}>
+            <p 
+              className="hero-description"
+              style={{ 
+                fontSize: '1.2rem', 
+                opacity: 0.95, 
+                marginBottom: '1.5rem',
+                lineHeight: 1.5,
+                fontWeight: 400
+              }}
+            >
               Componentes, periféricos y equipos listos para entregar. Asesoramiento y stock en tiempo real.
             </p>
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
@@ -239,13 +248,13 @@ export default function Home() {
 
         {/* Filters */}
         <div 
-          className="fade-in-up"
+          className="fade-in-up filters-container"
           style={{ 
             display: 'grid', 
             gridTemplateColumns: '1fr 1fr', 
             gap: '1.5rem', 
             marginBottom: '2.5rem',
-            padding: '1.5rem',
+            padding: '1.75rem',
             background: '#fff',
             borderRadius: '16px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)'
@@ -253,25 +262,105 @@ export default function Home() {
         >
           <div>
             <label htmlFor="search" style={{ 
-              display: 'block', 
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
               marginBottom: '0.75rem', 
               fontWeight: '700',
               color: '#1e293b',
               fontSize: '0.95rem'
             }}>
-              Buscar
+              <i className="pi pi-search" style={{ color: '#ff7a00' }}></i>
+              Buscar Productos
             </label>
-            <InputText
-              id="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Busca artículos..."
+            <div style={{ position: 'relative' }}>
+              <i className="pi pi-search" style={{ 
+                position: 'absolute',
+                left: '1rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#64748b',
+                zIndex: 1
+              }}></i>
+              <InputText
+                id="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Busca por nombre, descripción o categoría..."
+                style={{ 
+                  width: '100%',
+                  borderRadius: '12px',
+                  border: '2px solid #e2e8f0',
+                  padding: '0.75rem 1rem 0.75rem 2.75rem',
+                  fontSize: '1rem',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#ff7a00'
+                  e.target.style.boxShadow = '0 0 0 3px rgba(255, 122, 0, 0.1)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e2e8f0'
+                  e.target.style.boxShadow = 'none'
+                }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  style={{
+                    position: 'absolute',
+                    right: '0.75rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#64748b',
+                    cursor: 'pointer',
+                    padding: '0.25rem',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#f1f5f9'
+                    e.currentTarget.style.color = '#ff7a00'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent'
+                    e.currentTarget.style.color = '#64748b'
+                  }}
+                >
+                  <i className="pi pi-times" style={{ fontSize: '0.875rem' }}></i>
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="category" style={{ 
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginBottom: '0.75rem', 
+              fontWeight: '700',
+              color: '#1e293b',
+              fontSize: '0.95rem'
+            }}>
+              <i className="pi pi-filter" style={{ color: '#ff7a00' }}></i>
+              Filtrar por Categoría
+            </label>
+            <Dropdown
+              id="category"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.value)}
+              options={categories.map(cat => ({ label: cat, value: cat }))}
+              placeholder="Todas las categorías"
               style={{ 
                 width: '100%',
                 borderRadius: '12px',
                 border: '2px solid #e2e8f0',
-                padding: '0.75rem 1rem',
-                fontSize: '1rem',
                 transition: 'all 0.3s ease'
               }}
               onFocus={(e) => {
@@ -281,30 +370,6 @@ export default function Home() {
               onBlur={(e) => {
                 e.target.style.borderColor = '#e2e8f0'
                 e.target.style.boxShadow = 'none'
-              }}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="category" style={{ 
-              display: 'block', 
-              marginBottom: '0.75rem', 
-              fontWeight: '700',
-              color: '#1e293b',
-              fontSize: '0.95rem'
-            }}>
-              Categoría
-            </label>
-            <Dropdown
-              id="category"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.value)}
-              options={categories.map(cat => ({ label: cat, value: cat }))}
-              placeholder="Selecciona una categoría"
-              style={{ 
-                width: '100%',
-                borderRadius: '12px',
-                border: '2px solid #e2e8f0'
               }}
             />
           </div>

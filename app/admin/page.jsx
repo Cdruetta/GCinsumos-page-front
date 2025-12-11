@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Button } from 'primereact/button'
@@ -8,15 +9,25 @@ import { Dialog } from 'primereact/dialog'
 import { InputText } from 'primereact/inputtext'
 import { InputTextarea } from 'primereact/inputtextarea'
 import { InputNumber } from 'primereact/inputnumber'
+import { Dropdown } from 'primereact/dropdown'
 import { Toast } from 'primereact/toast'
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
 import { Card } from 'primereact/card'
 import { useRef } from 'react'
 import Header from '../../components/Header'
+import { useAuth } from '@/lib/auth-context'
+import { ROLES } from '@/lib/users-context'
+import { categories } from '@/lib/products-data'
 import { getProducts, createProduct, updateProduct, deleteProduct, updateStock } from '@/lib/api'
 
+const PRODUCT_CATEGORIES = categories.filter(cat => cat !== 'Todos')
+
 export default function AdminPage() {
+  const router = useRouter()
+  const { isAuthenticated, logout, hasPermission, mounted } = useAuth()
   const [products, setProducts] = useState([])
+  const [filteredProducts, setFilteredProducts] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [dialogVisible, setDialogVisible] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
@@ -31,20 +42,62 @@ export default function AdminPage() {
   const toast = useRef(null)
 
   useEffect(() => {
-    loadProducts()
-  }, [])
+    if (mounted && !isAuthenticated) {
+      router.push('/admin/login')
+      return
+    }
+    if (isAuthenticated) {
+      loadProducts()
+    }
+  }, [isAuthenticated, mounted, router])
+
+  // Mostrar loading mientras se verifica la autenticación
+  if (!mounted || !isAuthenticated) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #f8fafc 100%)'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <i className="pi pi-spin pi-spinner" style={{ fontSize: '3rem', color: '#ff7a00' }}></i>
+          <p style={{ marginTop: '1rem', color: '#64748b' }}>Verificando autenticación...</p>
+        </div>
+      </div>
+    )
+  }
 
   const loadProducts = async () => {
     try {
       setLoading(true)
       const data = await getProducts()
       setProducts(data)
+      setFilteredProducts(data)
     } catch (error) {
       toast.current.show({ severity: 'error', summary: 'Error', detail: 'Error al cargar productos' })
     } finally {
       setLoading(false)
     }
   }
+
+  // Filtrar productos por búsqueda
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredProducts(products)
+      return
+    }
+
+    const query = searchQuery.toLowerCase().trim()
+    const filtered = products.filter(product => 
+      product.name.toLowerCase().includes(query) ||
+      product.category.toLowerCase().includes(query) ||
+      product.description?.toLowerCase().includes(query) ||
+      product.price.toString().includes(query)
+    )
+    setFilteredProducts(filtered)
+  }, [searchQuery, products])
 
   const openNew = () => {
     setEditingProduct(null)
@@ -77,18 +130,64 @@ export default function AdminPage() {
   }
 
   const saveProduct = async () => {
+    // Validaciones
+    if (!formData.name || !formData.name.trim()) {
+      toast.current.show({ 
+        severity: 'error', 
+        summary: 'Error de validación', 
+        detail: 'El nombre del producto es requerido' 
+      })
+      return
+    }
+
+    if (!formData.category || !formData.category.trim()) {
+      toast.current.show({ 
+        severity: 'error', 
+        summary: 'Error de validación', 
+        detail: 'La categoría es requerida' 
+      })
+      return
+    }
+
+    if (!formData.description || !formData.description.trim()) {
+      toast.current.show({ 
+        severity: 'error', 
+        summary: 'Error de validación', 
+        detail: 'La descripción es requerida' 
+      })
+      return
+    }
+
+    if (!formData.price || formData.price <= 0) {
+      toast.current.show({ 
+        severity: 'error', 
+        summary: 'Error de validación', 
+        detail: 'El precio debe ser mayor a 0' 
+      })
+      return
+    }
+
+    if (formData.stock < 0) {
+      toast.current.show({ 
+        severity: 'error', 
+        summary: 'Error de validación', 
+        detail: 'El stock no puede ser negativo' 
+      })
+      return
+    }
+
     try {
       if (editingProduct) {
         await updateProduct(editingProduct.id, formData)
-        toast.current.show({ severity: 'success', summary: 'Éxito', detail: 'Producto actualizado' })
+        toast.current.show({ severity: 'success', summary: 'Éxito', detail: 'Producto actualizado correctamente' })
       } else {
         await createProduct(formData)
-        toast.current.show({ severity: 'success', summary: 'Éxito', detail: 'Producto creado' })
+        toast.current.show({ severity: 'success', summary: 'Éxito', detail: 'Producto creado correctamente' })
       }
       hideDialog()
       loadProducts()
     } catch (error) {
-      toast.current.show({ severity: 'error', summary: 'Error', detail: 'Error al guardar producto' })
+      toast.current.show({ severity: 'error', summary: 'Error', detail: 'Error al guardar producto. Verifica la conexión con el backend.' })
     }
   }
 
@@ -173,20 +272,52 @@ export default function AdminPage() {
 
       <div className="container">
         <div style={{ marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div 
+            className="admin-header"
+            style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              marginBottom: '1rem',
+              flexWrap: 'wrap',
+              gap: '1rem'
+            }}
+          >
             <div>
               <h1 style={{ fontSize: '2rem', fontWeight: 'bold' }}>Panel de Control</h1>
               <p style={{ color: '#666' }}>Gestiona el inventario de GCinsumos</p>
             </div>
-            <Button
-              label="Nuevo Producto"
-              icon="pi pi-plus"
-              onClick={openNew}
-            />
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <Button
+                label="Nuevo Producto"
+                icon="pi pi-plus"
+                onClick={openNew}
+                style={{ whiteSpace: 'nowrap' }}
+              />
+              {hasPermission && hasPermission(ROLES.SUDO) && (
+                <Button
+                  label="Usuarios"
+                  icon="pi pi-users"
+                  className="p-button-outlined"
+                  onClick={() => router.push('/admin/users')}
+                  style={{ whiteSpace: 'nowrap' }}
+                />
+              )}
+              <Button
+                label="Cerrar Sesión"
+                icon="pi pi-sign-out"
+                className="p-button-outlined p-button-danger"
+                onClick={() => {
+                  logout()
+                  router.push('/admin/login')
+                }}
+                style={{ whiteSpace: 'nowrap' }}
+              />
+            </div>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3" style={{ marginBottom: '2rem' }}>
+          <div className="grid grid-cols-3 admin-stats" style={{ marginBottom: '2rem' }}>
             <Card>
               <p style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem' }}>Total de Productos</p>
               <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#2196F3' }}>{stats.totalProducts}</p>
@@ -201,14 +332,72 @@ export default function AdminPage() {
             </Card>
           </div>
 
+          {/* Búsqueda de productos */}
+          <Card style={{ marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: '250px' }}>
+                <label htmlFor="admin-search" style={{ 
+                  display: 'block', 
+                  marginBottom: '0.5rem', 
+                  fontWeight: '600',
+                  color: '#1e293b',
+                  fontSize: '0.9rem'
+                }}>
+                  Buscar Productos
+                </label>
+                <span className="p-input-icon-left" style={{ width: '100%', display: 'block' }}>
+                  <i className="pi pi-search" style={{ color: '#64748b', left: '0.75rem' }}></i>
+                  <InputText
+                    id="admin-search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Buscar por nombre, categoría, descripción o precio..."
+                    style={{
+                      width: '100%',
+                      paddingLeft: '2.5rem',
+                      borderRadius: '12px',
+                      border: '2px solid #e2e8f0',
+                      padding: '0.75rem 1rem 0.75rem 2.5rem',
+                      fontSize: '1rem',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#ff7a00'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(255, 122, 0, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = 'none'
+                    }}
+                  />
+                </span>
+              </div>
+              {searchQuery && (
+                <Button
+                  label="Limpiar"
+                  icon="pi pi-times"
+                  className="p-button-outlined"
+                  onClick={() => setSearchQuery('')}
+                  style={{ marginTop: '1.75rem' }}
+                />
+              )}
+            </div>
+            {searchQuery && (
+              <p style={{ marginTop: '0.75rem', color: '#64748b', fontSize: '0.875rem' }}>
+                Mostrando {filteredProducts.length} de {products.length} productos
+              </p>
+            )}
+          </Card>
+
           {/* Products Table */}
           <Card>
             <DataTable
-              value={products}
+              value={filteredProducts}
               loading={loading}
               paginator
               rows={10}
-              emptyMessage="No hay productos"
+              emptyMessage={searchQuery ? "No se encontraron productos" : "No hay productos"}
+              globalFilter={searchQuery}
             >
               <Column field="name" header="Producto" sortable />
               <Column field="category" header="Categoría" sortable />
@@ -223,81 +412,256 @@ export default function AdminPage() {
       {/* Product Dialog */}
       <Dialog
         visible={dialogVisible}
-        style={{ width: '450px' }}
-        header={editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
+        style={{ width: '500px', maxWidth: '90vw' }}
+        header={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <i className={`pi ${editingProduct ? 'pi-pencil' : 'pi-plus'}`} style={{ fontSize: '1.25rem', color: '#ff7a00' }}></i>
+            <span>{editingProduct ? 'Editar Producto' : 'Nuevo Producto'}</span>
+          </div>
+        }
         modal
         onHide={hideDialog}
+        className="product-dialog"
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div>
-            <label htmlFor="name" style={{ display: 'block', marginBottom: '0.5rem' }}>Nombre</label>
-            <InputText
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              style={{ width: '100%' }}
-            />
-          </div>
+        <form onSubmit={(e) => { e.preventDefault(); saveProduct(); }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div>
+              <label htmlFor="name" style={{ 
+                display: 'block', 
+                marginBottom: '0.5rem',
+                fontWeight: '600',
+                color: '#1e293b',
+                fontSize: '0.9rem'
+              }}>
+                Nombre del Producto <span style={{ color: '#f44336' }}>*</span>
+              </label>
+              <InputText
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Ej: Monitor LED 27 pulgadas"
+                style={{ 
+                  width: '100%',
+                  borderRadius: '12px',
+                  border: '2px solid #e2e8f0',
+                  padding: '0.75rem 1rem',
+                  fontSize: '1rem',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#ff7a00'
+                  e.target.style.boxShadow = '0 0 0 3px rgba(255, 122, 0, 0.1)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e2e8f0'
+                  e.target.style.boxShadow = 'none'
+                }}
+                required
+              />
+            </div>
 
-          <div>
-            <label htmlFor="category" style={{ display: 'block', marginBottom: '0.5rem' }}>Categoría</label>
-            <InputText
-              id="category"
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              style={{ width: '100%' }}
-            />
-          </div>
+            <div>
+              <label htmlFor="category" style={{ 
+                display: 'block', 
+                marginBottom: '0.5rem',
+                fontWeight: '600',
+                color: '#1e293b',
+                fontSize: '0.9rem'
+              }}>
+                Categoría <span style={{ color: '#f44336' }}>*</span>
+              </label>
+              <Dropdown
+                id="category"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.value })}
+                options={PRODUCT_CATEGORIES.map(cat => ({ label: cat, value: cat }))}
+                placeholder="Selecciona una categoría"
+                style={{ 
+                  width: '100%',
+                  borderRadius: '12px',
+                  border: '2px solid #e2e8f0'
+                }}
+                required
+              />
+            </div>
 
-          <div>
-            <label htmlFor="price" style={{ display: 'block', marginBottom: '0.5rem' }}>Precio</label>
-            <InputNumber
-              id="price"
-              value={formData.price}
-              onValueChange={(e) => setFormData({ ...formData, price: e.value })}
-              mode="currency"
-              currency="ARS"
-              locale="es-AR"
-              style={{ width: '100%' }}
-            />
-          </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label htmlFor="price" style={{ 
+                  display: 'block', 
+                  marginBottom: '0.5rem',
+                  fontWeight: '600',
+                  color: '#1e293b',
+                  fontSize: '0.9rem'
+                }}>
+                  Precio (ARS) <span style={{ color: '#f44336' }}>*</span>
+                </label>
+                <InputNumber
+                  id="price"
+                  value={formData.price}
+                  onValueChange={(e) => setFormData({ ...formData, price: e.value || 0 })}
+                  mode="currency"
+                  currency="ARS"
+                  locale="es-AR"
+                  min={0}
+                  style={{ 
+                    width: '100%',
+                    borderRadius: '12px',
+                    border: '2px solid #e2e8f0'
+                  }}
+                  required
+                />
+              </div>
 
-          <div>
-            <label htmlFor="stock" style={{ display: 'block', marginBottom: '0.5rem' }}>Stock</label>
-            <InputNumber
-              id="stock"
-              value={formData.stock}
-              onValueChange={(e) => setFormData({ ...formData, stock: e.value })}
-              style={{ width: '100%' }}
-            />
-          </div>
+              <div>
+                <label htmlFor="stock" style={{ 
+                  display: 'block', 
+                  marginBottom: '0.5rem',
+                  fontWeight: '600',
+                  color: '#1e293b',
+                  fontSize: '0.9rem'
+                }}>
+                  Stock <span style={{ color: '#f44336' }}>*</span>
+                </label>
+                <InputNumber
+                  id="stock"
+                  value={formData.stock}
+                  onValueChange={(e) => setFormData({ ...formData, stock: e.value || 0 })}
+                  min={0}
+                  style={{ 
+                    width: '100%',
+                    borderRadius: '12px',
+                    border: '2px solid #e2e8f0'
+                  }}
+                  required
+                />
+              </div>
+            </div>
 
-          <div>
-            <label htmlFor="description" style={{ display: 'block', marginBottom: '0.5rem' }}>Descripción</label>
-            <InputTextarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={3}
-              style={{ width: '100%' }}
-            />
-          </div>
+            <div>
+              <label htmlFor="description" style={{ 
+                display: 'block', 
+                marginBottom: '0.5rem',
+                fontWeight: '600',
+                color: '#1e293b',
+                fontSize: '0.9rem'
+              }}>
+                Descripción <span style={{ color: '#f44336' }}>*</span>
+              </label>
+              <InputTextarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Describe las características principales del producto..."
+                rows={4}
+                style={{ 
+                  width: '100%',
+                  borderRadius: '12px',
+                  border: '2px solid #e2e8f0',
+                  padding: '0.75rem 1rem',
+                  fontSize: '1rem',
+                  resize: 'vertical',
+                  transition: 'all 0.3s ease',
+                  fontFamily: 'inherit'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#ff7a00'
+                  e.target.style.boxShadow = '0 0 0 3px rgba(255, 122, 0, 0.1)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e2e8f0'
+                  e.target.style.boxShadow = 'none'
+                }}
+                required
+              />
+            </div>
 
-          <div>
-            <label htmlFor="image" style={{ display: 'block', marginBottom: '0.5rem' }}>URL de Imagen</label>
-            <InputText
-              id="image"
-              value={formData.image}
-              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-              style={{ width: '100%' }}
-            />
-          </div>
+            <div>
+              <label htmlFor="image" style={{ 
+                display: 'block', 
+                marginBottom: '0.5rem',
+                fontWeight: '600',
+                color: '#1e293b',
+                fontSize: '0.9rem'
+              }}>
+                URL de Imagen
+              </label>
+              <InputText
+                id="image"
+                value={formData.image}
+                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                placeholder="/imagen-producto.jpg o https://..."
+                style={{ 
+                  width: '100%',
+                  borderRadius: '12px',
+                  border: '2px solid #e2e8f0',
+                  padding: '0.75rem 1rem',
+                  fontSize: '1rem',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#ff7a00'
+                  e.target.style.boxShadow = '0 0 0 3px rgba(255, 122, 0, 0.1)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e2e8f0'
+                  e.target.style.boxShadow = 'none'
+                }}
+              />
+              {formData.image && (
+                <div style={{ marginTop: '0.5rem' }}>
+                  <img 
+                    src={formData.image} 
+                    alt="Vista previa" 
+                    style={{ 
+                      maxWidth: '100%', 
+                      maxHeight: '150px', 
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      objectFit: 'cover'
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                    }}
+                  />
+                </div>
+              )}
+            </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
-            <Button label="Cancelar" icon="pi pi-times" onClick={hideDialog} className="p-button-text" />
-            <Button label="Guardar" icon="pi pi-check" onClick={saveProduct} />
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'flex-end', 
+              gap: '0.75rem', 
+              marginTop: '0.5rem',
+              paddingTop: '1rem',
+              borderTop: '1px solid #e2e8f0'
+            }}>
+              <Button 
+                label="Cancelar" 
+                icon="pi pi-times" 
+                onClick={hideDialog} 
+                className="p-button-outlined"
+                style={{
+                  borderRadius: '12px',
+                  padding: '0.6rem 1.2rem'
+                }}
+              />
+              <Button 
+                type="submit"
+                label="Guardar" 
+                icon="pi pi-check" 
+                onClick={saveProduct}
+                style={{
+                  background: 'linear-gradient(135deg, #ff7a00, #ff9f4d)',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '0.6rem 1.2rem',
+                  fontWeight: 600
+                }}
+              />
+            </div>
           </div>
-        </div>
+        </form>
       </Dialog>
     </div>
   )
