@@ -62,17 +62,17 @@ export default function AdminPage() {
   const toast = useRef(null)
 
   useEffect(() => {
-    if (mounted && !isAuthenticated) {
-      router.push('/admin/login')
-      return
-    }
-    if (isAuthenticated) {
+    if (mounted && isAuthenticated) {
       loadProducts()
     }
-  }, [isAuthenticated, mounted, router])
+    // Si está montado pero no autenticado, redirigir al home
+    if (mounted && !isAuthenticated && typeof window !== 'undefined') {
+      window.location.href = '/'
+    }
+  }, [isAuthenticated, mounted])
 
   // Mostrar loading mientras se verifica la autenticación
-  if (!mounted || !isAuthenticated) {
+  if (!mounted) {
     return (
       <div style={{
         minHeight: '100vh',
@@ -84,6 +84,24 @@ export default function AdminPage() {
         <div style={{ textAlign: 'center' }}>
           <i className="pi pi-spin pi-spinner" style={{ fontSize: '3rem', color: '#ff7a00' }}></i>
           <p style={{ marginTop: '1rem', color: '#64748b' }}>Verificando autenticación...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Si no está autenticado después de montar, mostrar mensaje de redirección
+  if (!isAuthenticated) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #f8fafc 100%)'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <i className="pi pi-spin pi-spinner" style={{ fontSize: '3rem', color: '#ff7a00' }}></i>
+          <p style={{ marginTop: '1rem', color: '#64748b' }}>Redirigiendo al home...</p>
         </div>
       </div>
     )
@@ -327,9 +345,15 @@ export default function AdminPage() {
                 label="Cerrar Sesión"
                 icon="pi pi-sign-out"
                 className="p-button-outlined p-button-danger"
-                onClick={() => {
+                onClick={async () => {
+                  // Primero hacer logout
                   logout()
-                  router.push('/')
+                  // Esperar un momento para que el estado se actualice
+                  await new Promise(resolve => setTimeout(resolve, 100))
+                  // Redirigir al home usando window.location para forzar recarga completa
+                  if (typeof window !== 'undefined') {
+                    window.location.href = '/'
+                  }
                 }}
                 style={{ whiteSpace: 'nowrap' }}
               />
@@ -691,3 +715,4 @@ export default function AdminPage() {
     </div>
   )
 }
+
