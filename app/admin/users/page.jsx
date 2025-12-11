@@ -13,7 +13,7 @@ import { Toast } from 'primereact/toast'
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
 import { Card } from 'primereact/card'
 import { Tag } from 'primereact/tag'
-import Header from '../../components/Header'
+import Header from '@/components/Header'
 import { useAuth } from '@/lib/auth-context'
 import { useUsers, ROLES } from '@/lib/users-context'
 
