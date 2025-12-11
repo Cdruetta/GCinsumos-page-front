@@ -45,8 +45,23 @@ export function AuthProvider({ children }) {
     // UsersProvider no está disponible, usar solo credenciales legacy
   }
 
+  const logout = () => {
+    setIsAuthenticated(false)
+    setCurrentUser(null)
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(AUTH_STORAGE_KEY)
+        localStorage.removeItem(AUTH_USER_KEY)
+        localStorage.removeItem(AUTH_TIMESTAMP_KEY)
+      }
+    } catch (error) {
+      console.error("No se pudo eliminar el estado de autenticación", error)
+    }
+  }
+
   // Verificar si la sesión ha expirado
   const checkSessionExpiry = () => {
+    if (typeof window === 'undefined') return false
     try {
       const timestamp = localStorage.getItem(AUTH_TIMESTAMP_KEY)
       if (!timestamp) return false
@@ -56,8 +71,6 @@ export function AuthProvider({ children }) {
       const elapsed = now - sessionTime
       
       if (elapsed > SESSION_TIMEOUT) {
-        // Sesión expirada
-        logout()
         return false
       }
       return true
@@ -69,6 +82,7 @@ export function AuthProvider({ children }) {
 
   // Hidrata el estado de autenticación desde localStorage
   useEffect(() => {
+    if (typeof window === 'undefined') return
     setMounted(true)
     try {
       const stored = localStorage.getItem(AUTH_STORAGE_KEY)
@@ -94,11 +108,11 @@ export function AuthProvider({ children }) {
 
   // Verificar expiración periódicamente
   useEffect(() => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated || typeof window === 'undefined') return
 
     const interval = setInterval(() => {
       if (!checkSessionExpiry()) {
-        setIsAuthenticated(false)
+        logout()
       }
     }, 60 * 1000) // Verificar cada minuto
 
@@ -151,17 +165,6 @@ export function AuthProvider({ children }) {
     }
   }
 
-  const logout = () => {
-    setIsAuthenticated(false)
-    setCurrentUser(null)
-    try {
-      localStorage.removeItem(AUTH_STORAGE_KEY)
-      localStorage.removeItem(AUTH_USER_KEY)
-      localStorage.removeItem(AUTH_TIMESTAMP_KEY)
-    } catch (error) {
-      console.error("No se pudo eliminar el estado de autenticación", error)
-    }
-  }
 
   const hasPermission = (requiredRole) => {
     if (!currentUser) return false

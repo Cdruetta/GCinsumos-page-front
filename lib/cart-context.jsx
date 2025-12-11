@@ -11,6 +11,7 @@ export function CartProvider({ children }) {
 
   // Hidrata el carrito desde localStorage en el cliente
   useEffect(() => {
+    if (typeof window === 'undefined') return
     setMounted(true)
     try {
       const stored = localStorage.getItem(CART_STORAGE_KEY)
@@ -27,7 +28,7 @@ export function CartProvider({ children }) {
 
   // Persiste los cambios del carrito
   useEffect(() => {
-    if (!mounted) return
+    if (!mounted || typeof window === 'undefined') return
     try {
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems))
     } catch (error) {

@@ -41,6 +41,7 @@ export function UsersProvider({ children }) {
 
   // Inicializar usuarios desde localStorage
   useEffect(() => {
+    if (typeof window === 'undefined') return
     setMounted(true)
     try {
       const stored = localStorage.getItem(USERS_STORAGE_KEY)
@@ -72,7 +73,7 @@ export function UsersProvider({ children }) {
 
   // Persistir usuarios
   useEffect(() => {
-    if (!mounted || users.length === 0) return
+    if (!mounted || users.length === 0 || typeof window === 'undefined') return
     try {
       localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users))
     } catch (error) {
