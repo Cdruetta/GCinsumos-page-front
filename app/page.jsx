@@ -87,20 +87,64 @@ export default function Home() {
 
       <div className="container">
         {/* Hero Section */}
-        <div style={{ marginBottom: '2rem', padding: '2rem', backgroundColor: 'white', borderRadius: '8px' }}>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-            GCinsumos
-          </h1>
-          <p style={{ fontSize: '1.1rem', color: '#666' }}>
-            Tu tienda de artículos tecnológicos de confianza. Encuentra los mejores componentes, periféricos y equipos para tu setup perfecto.
-          </p>
-          {fallbackUsed && (
-            <Message
-              severity="warn"
-              text="Mostrando datos de ejemplo porque el backend no está disponible."
-              style={{ marginTop: '1rem' }}
-            />
-          )}
+        <div style={{
+          marginBottom: '2rem',
+          padding: '2.5rem',
+          background: 'linear-gradient(135deg, #ff7a00, #ff9f4d)',
+          borderRadius: '16px',
+          color: '#fff',
+          display: 'flex',
+          gap: '1.5rem',
+          alignItems: 'center',
+          boxShadow: '0 20px 50px rgba(255, 122, 0, 0.2)'
+        }}>
+          <img src="/gclogo.png" alt="GCinsumos" style={{ width: 96, height: 96, borderRadius: '12px', background: '#fff', padding: '0.75rem' }} />
+          <div style={{ flex: 1 }}>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>
+              Monta tu setup soñado con GCinsumos
+            </h1>
+            <p style={{ fontSize: '1.1rem', opacity: 0.9, marginBottom: '1rem' }}>
+              Componentes, periféricos y equipos listos para entregar. Asesoramiento y stock en tiempo real.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setSelectedCategory('Todos')}
+                style={{
+                  padding: '0.75rem 1.25rem',
+                  borderRadius: 12,
+                  border: 'none',
+                  background: '#fff',
+                  color: '#ff7a00',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 12px 30px rgba(0,0,0,0.08)'
+                }}
+              >
+                Ver catálogo
+              </button>
+              <button
+                onClick={() => setSelectedCategory('Laptops')}
+                style={{
+                  padding: '0.75rem 1.25rem',
+                  borderRadius: 12,
+                  border: '1px solid rgba(255,255,255,0.6)',
+                  background: 'transparent',
+                  color: '#fff',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Laptops destacadas
+              </button>
+            </div>
+            {fallbackUsed && (
+              <Message
+                severity="warn"
+                text="Mostrando datos de ejemplo porque el backend no está disponible."
+                style={{ marginTop: '1rem', background: 'rgba(255,255,255,0.15)', border: 'none' }}
+              />
+            )}
+          </div>
         </div>
 
         {/* Filters */}
