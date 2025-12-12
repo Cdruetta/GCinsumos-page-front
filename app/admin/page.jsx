@@ -686,51 +686,191 @@ export default function AdminPage() {
                 color: '#1e293b',
                 fontSize: '0.9rem'
               }}>
-                URL de Imagen
+                Imagen del Producto
               </label>
-              <InputText
-                id="image"
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                placeholder="/imagen-producto.jpg o https://..."
-                style={{ 
-                  width: '100%',
-                  borderRadius: '12px',
-                  border: '2px solid #e2e8f0',
-                  padding: '0.75rem 1rem',
-                  fontSize: '1rem',
-                  transition: 'all 0.3s ease'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#ff7a00'
-                  e.target.style.boxShadow = '0 0 0 3px rgba(255, 122, 0, 0.1)'
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#e2e8f0'
-                  e.target.style.boxShadow = 'none'
-                }}
-              />
-              {formData.image && (
-                <div style={{ marginTop: '0.5rem' }}>
-                  <img 
-                    src={getImageUrl(formData.image)} 
-                    alt="Vista previa" 
-                    style={{ 
-                      maxWidth: '100%', 
-                      maxHeight: '150px', 
-                      borderRadius: '8px',
-                      border: '1px solid #e2e8f0',
-                      objectFit: 'cover'
+              <div style={{ 
+                display: 'flex', 
+                gap: '0.5rem',
+                marginBottom: '0.5rem'
+              }}>
+                <InputText
+                  id="image"
+                  value={formData.image}
+                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                  placeholder="Pega aquí la URL de la imagen (https://...) o ruta local (/uploads/...)"
+                  style={{ 
+                    flex: 1,
+                    borderRadius: '12px',
+                    border: '2px solid #e2e8f0',
+                    padding: '0.75rem 1rem',
+                    fontSize: '1rem',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#ff7a00'
+                    e.target.style.boxShadow = '0 0 0 3px rgba(255, 122, 0, 0.1)'
+                  }}
+                  onBlur={(e) => {
+                    const url = e.target.value
+                    const isValid = !url || url.startsWith('/') || url.startsWith('http://') || url.startsWith('https://')
+                    e.target.style.borderColor = isValid ? '#e2e8f0' : '#f59e0b'
+                    e.target.style.boxShadow = 'none'
+                  }}
+                />
+                <Button
+                  icon="pi pi-paste"
+                  label="Pegar URL"
+                  onClick={async () => {
+                    try {
+                      const text = await navigator.clipboard.readText()
+                      if (text && (text.startsWith('http://') || text.startsWith('https://') || text.startsWith('/'))) {
+                        setFormData({ ...formData, image: text })
+                        toast.current.show({
+                          severity: 'success',
+                          summary: 'URL pegada',
+                          detail: 'URL de imagen pegada desde el portapapeles',
+                          life: 2000
+                        })
+                      } else {
+                        toast.current.show({
+                          severity: 'warn',
+                          summary: 'URL inválida',
+                          detail: 'El portapapeles no contiene una URL válida',
+                          life: 3000
+                        })
+                      }
+                    } catch (err) {
+                      toast.current.show({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'No se pudo leer el portapapeles. Usa Ctrl+V para pegar manualmente.',
+                        life: 3000
+                      })
+                    }
+                  }}
+                  className="p-button-outlined"
+                  style={{
+                    whiteSpace: 'nowrap',
+                    padding: '0.75rem 1rem'
+                  }}
+                />
+                {formData.image && (
+                  <Button
+                    icon="pi pi-times"
+                    onClick={() => setFormData({ ...formData, image: '' })}
+                    className="p-button-outlined p-button-danger"
+                    style={{
+                      padding: '0.75rem 1rem'
                     }}
-                    onError={(e) => {
-                      console.error('Error cargando imagen de vista previa:', formData.image, 'URL generada:', getImageUrl(formData.image))
-                      e.target.style.display = 'none'
-                      e.target.onerror = null // Evitar loop infinito
-                    }}
-                    onLoad={() => {
-                      console.log('Imagen cargada exitosamente:', getImageUrl(formData.image))
-                    }}
+                    tooltip="Limpiar imagen"
+                    tooltipOptions={{ position: 'top' }}
                   />
+                )}
+              </div>
+              
+              {/* Instrucciones */}
+              <div style={{
+                marginBottom: '0.75rem',
+                padding: '0.75rem',
+                background: '#f8fafc',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0'
+              }}>
+                <p style={{ 
+                  margin: 0, 
+                  fontSize: '0.875rem', 
+                  color: '#64748b',
+                  lineHeight: 1.5
+                }}>
+                  <strong style={{ color: '#1e293b' }}>💡 Cómo obtener la URL de una imagen:</strong>
+                </p>
+                <ol style={{ 
+                  margin: '0.5rem 0 0 0', 
+                  paddingLeft: '1.25rem',
+                  fontSize: '0.875rem',
+                  color: '#64748b',
+                  lineHeight: 1.6
+                }}>
+                  <li>Haz clic derecho en la imagen que quieres usar</li>
+                  <li>Selecciona "Copiar dirección de imagen" o "Copy image address"</li>
+                  <li>Pega la URL aquí o usa el botón "Pegar URL"</li>
+                </ol>
+                <p style={{ 
+                  margin: '0.5rem 0 0 0', 
+                  fontSize: '0.875rem', 
+                  color: '#f59e0b',
+                  fontWeight: 500
+                }}>
+                  ⚠️ Asegúrate de usar la URL directa de la imagen, no la URL de una página web
+                </p>
+              </div>
+
+              {/* Vista previa */}
+              {formData.image && (
+                <div style={{ 
+                  marginTop: '0.75rem',
+                  padding: '1rem',
+                  background: '#f8fafc',
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0'
+                }}>
+                  <p style={{ 
+                    margin: '0 0 0.75rem 0', 
+                    fontSize: '0.875rem', 
+                    fontWeight: 600,
+                    color: '#1e293b'
+                  }}>
+                    Vista previa:
+                  </p>
+                  <div style={{
+                    position: 'relative',
+                    width: '100%',
+                    maxHeight: '200px',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    background: '#fff',
+                    border: '2px solid #e2e8f0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <img 
+                      src={getImageUrl(formData.image)} 
+                      alt="Vista previa" 
+                      style={{ 
+                        maxWidth: '100%', 
+                        maxHeight: '200px', 
+                        borderRadius: '6px',
+                        objectFit: 'contain'
+                      }}
+                      onError={(e) => {
+                        console.error('❌ Error cargando imagen de vista previa:', formData.image)
+                        e.target.style.display = 'none'
+                        e.target.onerror = null
+                        const errorDiv = e.target.parentElement.querySelector('.preview-error')
+                        if (!errorDiv) {
+                          const div = document.createElement('div')
+                          div.className = 'preview-error'
+                          div.style.cssText = 'padding: 2rem; text-align: center; color: #ef4444;'
+                          div.innerHTML = '<i class="pi pi-exclamation-triangle" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i><p style="margin: 0; font-size: 0.875rem;">No se pudo cargar la imagen. Verifica que la URL sea correcta.</p>'
+                          e.target.parentElement.appendChild(div)
+                        }
+                      }}
+                      onLoad={(e) => {
+                        console.log('✅ Vista previa cargada exitosamente')
+                        const errorDiv = e.target.parentElement.querySelector('.preview-error')
+                        if (errorDiv) errorDiv.remove()
+                      }}
+                    />
+                  </div>
+                  <p style={{ 
+                    margin: '0.5rem 0 0 0', 
+                    fontSize: '0.75rem', 
+                    color: '#64748b',
+                    wordBreak: 'break-all'
+                  }}>
+                    URL: {formData.image}
+                  </p>
                 </div>
               )}
             </div>
