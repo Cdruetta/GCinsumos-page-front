@@ -164,7 +164,7 @@ export function AuthProvider({ children }) {
         const legacyUser = {
           id: 'legacy',
           username: credentials.username,
-          role: 'root',
+          role: 'admin',
           createdAt: new Date().toISOString()
         }
         setIsAuthenticated(true)

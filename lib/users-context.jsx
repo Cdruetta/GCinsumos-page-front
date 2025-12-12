@@ -8,9 +8,7 @@ export const UsersContext = createContext()
 
 // Roles disponibles
 export const ROLES = {
-  ADMIN: 'admin',
-  SUDO: 'sudo',
-  ROOT: 'root'
+  ADMIN: 'admin'
 }
 
 // Función simple para hash de contraseña (mismo que en el backend)
@@ -202,12 +200,8 @@ export function UsersProvider({ children }) {
   }
 
   const hasPermission = (userRole, requiredRole) => {
-    const roleHierarchy = {
-      [ROLES.ADMIN]: 1,
-      [ROLES.SUDO]: 2,
-      [ROLES.ROOT]: 3
-    }
-    return roleHierarchy[userRole] >= roleHierarchy[requiredRole]
+    // Solo existe ADMIN, todos los usuarios autenticados tienen todos los permisos
+    return userRole === ROLES.ADMIN
   }
 
   return (

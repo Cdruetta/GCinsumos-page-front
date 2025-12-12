@@ -38,18 +38,7 @@ export default function UsersPage() {
       return
     }
     if (mounted && isAuthenticated) {
-      // Verificar permisos - solo sudo y root pueden gestionar usuarios
-      // Pero permitir ver la página aunque no tenga permisos (solo no podrá crear/editar)
-      if (!hasPermission(ROLES.SUDO)) {
-        console.warn('⚠️ Usuario sin permisos SUDO para gestionar usuarios')
-        // No redirigir, solo mostrar advertencia
-        toast.current?.show({
-          severity: 'warn',
-          summary: 'Permisos limitados',
-          detail: 'Solo usuarios con rol SUDO o ROOT pueden crear y editar usuarios',
-          life: 5000
-        })
-      }
+      // Todos los usuarios ADMIN pueden gestionar usuarios
       // Cargar usuarios desde la API cuando la página se monta
       if (loadUsers && usersMounted) {
         loadUsers().then(() => {
@@ -97,8 +86,8 @@ export default function UsersPage() {
     )
   }
 
-  // Mostrar la página aunque no tenga permisos, pero deshabilitar acciones
-  const canManageUsers = hasPermission(ROLES.SUDO)
+  // Todos los usuarios ADMIN pueden gestionar usuarios
+  const canManageUsers = hasPermission && hasPermission(ROLES.ADMIN)
 
   const openNew = () => {
     setEditingUser(null)
@@ -295,17 +284,13 @@ export default function UsersPage() {
 
   const roleBodyTemplate = (rowData) => {
     const roleColors = {
-      [ROLES.ADMIN]: 'info',
-      [ROLES.SUDO]: 'warning',
-      [ROLES.ROOT]: 'danger'
+      [ROLES.ADMIN]: 'info'
     }
     const roleLabels = {
-      [ROLES.ADMIN]: 'Admin',
-      [ROLES.SUDO]: 'Sudo',
-      [ROLES.ROOT]: 'Root'
+      [ROLES.ADMIN]: 'Admin'
     }
     return (
-      <Tag value={roleLabels[rowData.role]} severity={roleColors[rowData.role]} />
+      <Tag value={roleLabels[rowData.role] || 'Admin'} severity={roleColors[rowData.role] || 'info'} />
     )
   }
 
@@ -327,30 +312,28 @@ export default function UsersPage() {
           className="p-button-rounded p-button-text"
           onClick={() => openEdit(rowData)}
           disabled={!canManageUsers || isCurrentUser}
-          tooltip={!canManageUsers ? 'Se requieren permisos SUDO o ROOT' : 'Editar'}
+          tooltip={isCurrentUser ? 'No puedes editar tu propia cuenta' : 'Editar'}
         />
         <Button
           icon={rowData.active ? 'pi pi-ban' : 'pi pi-check'}
           className="p-button-rounded p-button-text p-button-warning"
           onClick={() => handleToggleStatus(rowData)}
           disabled={!canManageUsers || isCurrentUser}
-          tooltip={!canManageUsers ? 'Se requieren permisos SUDO o ROOT' : (rowData.active ? 'Desactivar' : 'Activar')}
+          tooltip={isCurrentUser ? 'No puedes desactivar tu propia cuenta' : (rowData.active ? 'Desactivar' : 'Activar')}
         />
         <Button
           icon="pi pi-trash"
           className="p-button-rounded p-button-text p-button-danger"
           onClick={() => confirmDelete(rowData)}
           disabled={!canManageUsers || isCurrentUser}
-          tooltip={!canManageUsers ? 'Se requieren permisos SUDO o ROOT' : 'Eliminar'}
+          tooltip={isCurrentUser ? 'No puedes eliminar tu propia cuenta' : 'Eliminar'}
         />
       </div>
     )
   }
 
   const roleOptions = [
-    { label: 'Admin', value: ROLES.ADMIN },
-    { label: 'Sudo', value: ROLES.SUDO },
-    { label: 'Root', value: ROLES.ROOT }
+    { label: 'Admin', value: ROLES.ADMIN }
   ]
 
   return (
@@ -386,8 +369,6 @@ export default function UsersPage() {
                 fontWeight: 500,
                 opacity: canManageUsers ? 1 : 0.5
               }}
-              tooltip={!canManageUsers ? 'Se requieren permisos SUDO o ROOT para crear usuarios' : ''}
-              tooltipOptions={{ position: 'bottom' }}
             />
           </div>
 
@@ -491,10 +472,9 @@ export default function UsersPage() {
               options={roleOptions}
               placeholder="Selecciona un rol"
               style={{ width: '100%' }}
-              disabled={currentUser?.role !== ROLES.ROOT && editingUser?.role === ROLES.ROOT}
             />
             <small style={{ color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-              Root: Acceso total | Sudo: Puede gestionar usuarios | Admin: Acceso básico
+              Admin: Acceso completo al sistema
             </small>
           </div>
 
