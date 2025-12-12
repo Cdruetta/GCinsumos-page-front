@@ -39,15 +39,16 @@ export default function UsersPage() {
     }
     if (mounted && isAuthenticated) {
       // Verificar permisos - solo sudo y root pueden gestionar usuarios
+      // Pero permitir ver la página aunque no tenga permisos (solo no podrá crear/editar)
       if (!hasPermission(ROLES.SUDO)) {
+        console.warn('⚠️ Usuario sin permisos SUDO para gestionar usuarios')
+        // No redirigir, solo mostrar advertencia
         toast.current?.show({
-          severity: 'error',
-          summary: 'Acceso denegado',
-          detail: 'No tienes permisos para gestionar usuarios',
-          life: 3000
+          severity: 'warn',
+          summary: 'Permisos limitados',
+          detail: 'Solo usuarios con rol SUDO o ROOT pueden crear y editar usuarios',
+          life: 5000
         })
-        setTimeout(() => router.push('/admin'), 2000)
-        return
       }
       // Cargar usuarios desde la API cuando la página se monta
       if (loadUsers && usersMounted) {
@@ -96,9 +97,8 @@ export default function UsersPage() {
     )
   }
 
-  if (!hasPermission(ROLES.SUDO)) {
-    return null
-  }
+  // Mostrar la página aunque no tenga permisos, pero deshabilitar acciones
+  const canManageUsers = hasPermission(ROLES.SUDO)
 
   const openNew = () => {
     setEditingUser(null)
@@ -326,21 +326,22 @@ export default function UsersPage() {
           icon="pi pi-pencil"
           className="p-button-rounded p-button-text"
           onClick={() => openEdit(rowData)}
-          tooltip="Editar"
+          disabled={!canManageUsers || isCurrentUser}
+          tooltip={!canManageUsers ? 'Se requieren permisos SUDO o ROOT' : 'Editar'}
         />
         <Button
           icon={rowData.active ? 'pi pi-ban' : 'pi pi-check'}
           className="p-button-rounded p-button-text p-button-warning"
           onClick={() => handleToggleStatus(rowData)}
-          disabled={isCurrentUser}
-          tooltip={rowData.active ? 'Desactivar' : 'Activar'}
+          disabled={!canManageUsers || isCurrentUser}
+          tooltip={!canManageUsers ? 'Se requieren permisos SUDO o ROOT' : (rowData.active ? 'Desactivar' : 'Activar')}
         />
         <Button
           icon="pi pi-trash"
           className="p-button-rounded p-button-text p-button-danger"
           onClick={() => confirmDelete(rowData)}
-          disabled={isCurrentUser}
-          tooltip="Eliminar"
+          disabled={!canManageUsers || isCurrentUser}
+          tooltip={!canManageUsers ? 'Se requieren permisos SUDO o ROOT' : 'Eliminar'}
         />
       </div>
     )
@@ -376,13 +377,17 @@ export default function UsersPage() {
               label="Nuevo Usuario"
               icon="pi pi-plus"
               onClick={openNew}
+              disabled={!canManageUsers}
               style={{ 
                 whiteSpace: 'nowrap',
                 padding: '0.75rem 1.5rem',
                 minHeight: '44px',
                 fontSize: '0.95rem',
-                fontWeight: 500
+                fontWeight: 500,
+                opacity: canManageUsers ? 1 : 0.5
               }}
+              tooltip={!canManageUsers ? 'Se requieren permisos SUDO o ROOT para crear usuarios' : ''}
+              tooltipOptions={{ position: 'bottom' }}
             />
           </div>
 

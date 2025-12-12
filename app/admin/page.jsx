@@ -18,7 +18,7 @@ import Header from '../../components/Header'
 import { useAuth } from '@/lib/auth-context'
 import { ROLES } from '@/lib/users-context'
 import { categories } from '@/lib/products-data'
-import { getProducts, createProduct, updateProduct, deleteProduct, updateStock, getProductCategories } from '@/lib/api'
+import { getProducts, createProduct, updateProduct, deleteProduct, updateStock, getProductCategories, uploadImage } from '@/lib/api'
 
 // PRODUCT_CATEGORIES se cargará dinámicamente desde la API
 
@@ -60,6 +60,8 @@ export default function AdminPage() {
     description: '',
     image: ''
   })
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const fileInputRef = useRef(null)
   const toast = useRef(null)
 
   useEffect(() => {
@@ -688,6 +690,115 @@ export default function AdminPage() {
               }}>
                 Imagen del Producto
               </label>
+              
+              {/* Opción 1: Subir archivo desde la computadora */}
+              <div style={{
+                marginBottom: '1rem',
+                padding: '1rem',
+                background: '#f0f9ff',
+                borderRadius: '12px',
+                border: '2px dashed #3b82f6'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  <i className="pi pi-upload" style={{ fontSize: '1.5rem', color: '#3b82f6' }}></i>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: 0, fontWeight: 600, color: '#1e293b', fontSize: '0.95rem' }}>
+                      Subir imagen desde tu computadora
+                    </p>
+                    <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: '#64748b' }}>
+                      Selecciona un archivo de imagen (JPG, PNG, GIF, WEBP - máximo 5MB)
+                    </p>
+                  </div>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/svg+xml,image/bmp"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+
+                    // Validar tamaño (5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                      toast.current.show({
+                        severity: 'error',
+                        summary: 'Archivo muy grande',
+                        detail: 'El archivo no puede ser mayor a 5MB',
+                        life: 4000
+                      })
+                      e.target.value = ''
+                      return
+                    }
+
+                    try {
+                      setUploadingImage(true)
+                      toast.current.show({
+                        severity: 'info',
+                        summary: 'Subiendo imagen...',
+                        detail: 'Por favor espera',
+                        life: 2000
+                      })
+
+                      const result = await uploadImage(file)
+                      setFormData({ ...formData, image: result.imagePath })
+                      
+                      toast.current.show({
+                        severity: 'success',
+                        summary: 'Imagen subida',
+                        detail: 'La imagen se ha subido correctamente',
+                        life: 3000
+                      })
+                    } catch (error) {
+                      console.error('Error al subir imagen:', error)
+                      toast.current.show({
+                        severity: 'error',
+                        summary: 'Error al subir',
+                        detail: error.response?.data?.error || error.message || 'No se pudo subir la imagen',
+                        life: 5000
+                      })
+                    } finally {
+                      setUploadingImage(false)
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = ''
+                      }
+                    }
+                  }}
+                  style={{ display: 'none' }}
+                  disabled={uploadingImage}
+                />
+                <Button
+                  label={uploadingImage ? 'Subiendo...' : 'Seleccionar archivo'}
+                  icon={uploadingImage ? 'pi pi-spin pi-spinner' : 'pi pi-upload'}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  style={{
+                    width: '100%',
+                    background: uploadingImage 
+                      ? '#cbd5e1' 
+                      : 'linear-gradient(135deg, #3b82f6, #60a5fa)',
+                    border: 'none',
+                    color: '#fff',
+                    fontWeight: 600,
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '12px'
+                  }}
+                />
+              </div>
+
+              {/* Separador */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                margin: '1rem 0',
+                color: '#94a3b8'
+              }}>
+                <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
+                <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>O</span>
+                <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
+              </div>
+
+              {/* Opción 2: Pegar URL */}
               <div style={{ 
                 display: 'flex', 
                 gap: '0.5rem',
