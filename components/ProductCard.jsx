@@ -39,10 +39,11 @@ export default function ProductCard({ product }) {
             <img
                 alt={product.name}
                 src={imageError ? '/placeholder.svg' : buildImageUrl(product.image)}
-                style={{ 
-                    width: '100%', 
-                    height: '240px', 
-                    objectFit: 'cover',
+                style={{
+                    width: '100%',
+                    height: '240px',
+                    objectFit: 'contain',
+                    padding: '1rem',
                     transition: 'opacity 0.3s ease, transform 0.4s ease',
                     backgroundColor: '#f8f9fa',
                     opacity: imageLoaded ? 1 : 0,
@@ -86,23 +87,23 @@ export default function ProductCard({ product }) {
     )
 
     const footer = (
-        <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+        <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'center',
             paddingTop: '1rem',
             borderTop: '1px solid #e2e8f0'
         }}>
             <div>
-                <span style={{ 
-                    fontSize: '0.875rem', 
+                <span style={{
+                    fontSize: '0.875rem',
                     color: '#64748b',
                     fontWeight: 500
                 }}>
                     Precio
                 </span>
-                <div style={{ 
-                    fontSize: '1.75rem', 
+                <div style={{
+                    fontSize: '1.75rem',
                     fontWeight: '800',
                     background: 'linear-gradient(135deg, #ff7a00, #ff9f4d)',
                     WebkitBackgroundClip: 'text',
@@ -119,15 +120,15 @@ export default function ProductCard({ product }) {
                 disabled={product.stock === 0}
                 className="p-button-warning"
                 style={{
-                    background: product.stock > 0 
-                        ? 'linear-gradient(135deg, #ff7a00, #ff9f4d)' 
+                    background: product.stock > 0
+                        ? 'linear-gradient(135deg, #ff7a00, #ff9f4d)'
                         : '#cbd5e1',
                     border: 'none',
                     fontWeight: 600,
                     padding: '0.6rem 1.2rem',
                     borderRadius: '12px',
-                    boxShadow: product.stock > 0 
-                        ? '0 4px 12px rgba(255, 122, 0, 0.3)' 
+                    boxShadow: product.stock > 0
+                        ? '0 4px 12px rgba(255, 122, 0, 0.3)'
                         : 'none',
                     transition: 'all 0.3s ease',
                     opacity: product.stock === 0 ? 0.5 : 1
@@ -140,8 +141,8 @@ export default function ProductCard({ product }) {
                 }}
                 onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.boxShadow = product.stock > 0 
-                        ? '0 4px 12px rgba(255, 122, 0, 0.3)' 
+                    e.currentTarget.style.boxShadow = product.stock > 0
+                        ? '0 4px 12px rgba(255, 122, 0, 0.3)'
                         : 'none'
                 }}
             />
@@ -151,8 +152,8 @@ export default function ProductCard({ product }) {
     return (
         <Card
             title={
-                <span style={{ 
-                    fontSize: '1.1rem', 
+                <span style={{
+                    fontSize: '1.1rem',
                     fontWeight: 700,
                     color: '#1e293b',
                     lineHeight: 1.3
@@ -163,7 +164,7 @@ export default function ProductCard({ product }) {
             header={header}
             footer={footer}
             className="hover-lift fade-in-up"
-            style={{ 
+            style={{
                 marginBottom: '1.5rem',
                 borderRadius: '16px',
                 border: 'none',
@@ -179,8 +180,8 @@ export default function ProductCard({ product }) {
                 e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)'
             }}
         >
-            <p style={{ 
-                marginBottom: '1rem', 
+            <p style={{
+                marginBottom: '1rem',
                 color: '#64748b',
                 fontSize: '0.9rem',
                 lineHeight: 1.6,

@@ -514,6 +514,16 @@ export default function AdminPage() {
               emptyMessage={searchQuery ? "No se encontraron productos" : "No hay productos"}
               globalFilter={searchQuery}
             >
+              <Column header="Imagen" body={(rowData) => (
+                <div style={{ width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8f9fa', borderRadius: '4px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                  <img
+                    src={getImageUrl(rowData.image)}
+                    alt={rowData.name}
+                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                    onError={(e) => e.target.src = '/placeholder.svg'}
+                  />
+                </div>
+              )} />
               <Column field="name" header="Producto" sortable />
               <Column field="category" header="Categoría" sortable />
               <Column field="price" header="Precio" body={priceBodyTemplate} sortable />
