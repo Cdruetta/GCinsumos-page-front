@@ -92,7 +92,7 @@ export default function Header() {
               GCinsumos
             </span>
             <span className="header-subtitle" style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500, whiteSpace: 'nowrap' }}>
-              Tech & periféricos
+              Soluciones Tech
             </span>
           </div>
         </div>

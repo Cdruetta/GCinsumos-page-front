@@ -14,8 +14,8 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <head>
-        <title>GCinsumos - Artículos Tecnológicos</title>
-        <meta name="description" content="Consulta y venta de artículos tecnológicos de calidad" />
+        <title>GCinsumos</title>
+        <meta name="description" content="Venta de artículos tecnológicos de calidad y soluciones tech" />
       </head>
       <body>
         <PrimeReactProvider>

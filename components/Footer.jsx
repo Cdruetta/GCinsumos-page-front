@@ -12,31 +12,19 @@ export default function Footer() {
     {
       name: 'Facebook',
       icon: 'pi pi-facebook',
-      url: 'https://facebook.com',
+      url: 'https://www.facebook.com/share/1GUuX22Rfq/',
       color: '#1877F2'
     },
     {
       name: 'Instagram',
       icon: 'pi pi-instagram',
-      url: 'https://instagram.com',
+      url: 'https://www.instagram.com/gcinsumos?igsh=OHN4aWQyaXdmdDkz',
       color: '#E4405F'
-    },
-    {
-      name: 'Twitter',
-      icon: 'pi pi-twitter',
-      url: 'https://twitter.com',
-      color: '#1DA1F2'
-    },
-    {
-      name: 'LinkedIn',
-      icon: 'pi pi-linkedin',
-      url: 'https://linkedin.com',
-      color: '#0077B5'
     },
     {
       name: 'WhatsApp',
       icon: 'pi pi-whatsapp',
-      url: 'https://wa.me/',
+      url: 'https://wa.me/c/5493586546525',
       color: '#25D366'
     }
   ]
@@ -262,7 +250,7 @@ export default function Footer() {
                     Email
                   </p>
                   <a
-                    href="mailto:contacto@gcinsumos.com"
+                    href="mailto:cgiseponzio@gmail.com"
                     style={{
                       color: '#cbd5e1',
                       fontSize: '0.95rem',
@@ -272,7 +260,7 @@ export default function Footer() {
                     onMouseEnter={(e) => e.currentTarget.style.color = '#ff7a00'}
                     onMouseLeave={(e) => e.currentTarget.style.color = '#cbd5e1'}
                   >
-                    contacto@gcinsumos.com
+                    giseponzio@gmail.com
                   </a>
                 </div>
               </div>
@@ -304,7 +292,7 @@ export default function Footer() {
                     Teléfono
                   </p>
                   <a
-                    href="tel:+5491123456789"
+                    href="tel:+5493586546525"
                     style={{
                       color: '#cbd5e1',
                       fontSize: '0.95rem',
@@ -314,7 +302,7 @@ export default function Footer() {
                     onMouseEnter={(e) => e.currentTarget.style.color = '#ff7a00'}
                     onMouseLeave={(e) => e.currentTarget.style.color = '#cbd5e1'}
                   >
-                    +54 9 11 2345-6789
+                    +54 9 358 6546525
                   </a>
                 </div>
               </div>
@@ -351,7 +339,7 @@ export default function Footer() {
                     margin: 0,
                     lineHeight: 1.5
                   }}>
-                    Buenos Aires, Argentina
+                    Rio Cuarto, Cordoba, Argentina
                   </p>
                 </div>
               </div>
@@ -379,7 +367,7 @@ export default function Footer() {
             fontSize: '0.875rem',
             margin: 0
           }}>
-            © {currentYear} GCinsumos. Todos los derechos reservados.
+            © {currentYear} GCinsumos. Todos los derechos reservados. 2025
           </p>
           <div style={{
             display: 'flex',
@@ -405,7 +393,6 @@ export default function Footer() {
             </button>
             <span style={{ color: '#64748b' }}>•</span>
             <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
-              Hecho con ❤️ para la comunidad tech
             </span>
           </div>
         </div>
