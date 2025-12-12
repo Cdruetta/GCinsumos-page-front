@@ -14,8 +14,36 @@ import { products as mockProducts } from '@/lib/products-data'
 const getImageUrl = (imagePath) => {
   if (!imagePath) return '/placeholder.svg'
   
-  // Si ya es una URL completa (http/https), usarla directamente
+  // Si ya es una URL completa (http/https), validar que sea una imagen
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    // Verificar que no sea una URL de página HTML
+    // Las URLs de imágenes suelen tener extensiones de imagen o rutas específicas
+    const isImageUrl = imagePath.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)(\?|#|$)/i) ||
+                      imagePath.includes('/image/') ||
+                      imagePath.includes('/img/') ||
+                      imagePath.includes('/uploads/') ||
+                      imagePath.includes('/media/') ||
+                      imagePath.includes('/assets/') ||
+                      imagePath.includes('i.imgur.com') ||
+                      imagePath.includes('res.cloudinary.com') ||
+                      imagePath.includes('goetech.ar') ||
+                      imagePath.includes('cdn.') ||
+                      imagePath.includes('static.')
+    
+    // Si tiene ? o # y no parece ser una imagen, probablemente es una página web
+    // Pero intentar cargarla de todas formas (algunos CDNs usan query params)
+    if ((imagePath.includes('?') || imagePath.includes('#')) && !isImageUrl) {
+      // Si es de un dominio conocido de imágenes, permitirlo
+      const knownImageDomains = ['imgur.com', 'cloudinary.com', 'unsplash.com', 'pexels.com', 'pixabay.com', 'goetech.ar']
+      const isKnownDomain = knownImageDomains.some(domain => imagePath.includes(domain))
+      
+      if (!isKnownDomain) {
+        console.warn('⚠️ URL parece ser una página web, no una imagen:', imagePath)
+        console.warn('💡 Necesitas la URL directa de la imagen. Ver: COMO_OBTENER_URL_IMAGEN.md')
+        // Intentar cargarla de todas formas, el navegador decidirá
+      }
+    }
+    
     return imagePath
   }
   
@@ -38,10 +66,13 @@ export default function Home() {
   const toastRef = useRef(null)
 
   // Memoizar productos con imágenes para evitar recálculos y parpadeo
-  const productsWithImages = useMemo(() => 
-    products.filter(p => p.image).slice(0, 10),
-    [products]
-  )
+  // Mostrar todos los productos, pero priorizar los que tienen imágenes
+  const productsWithImages = useMemo(() => {
+    const withImages = products.filter(p => p.image && p.image.trim() !== '')
+    const withoutImages = products.filter(p => !p.image || p.image.trim() === '')
+    // Combinar: primero los que tienen imágenes, luego los que no
+    return [...withImages, ...withoutImages].slice(0, 10)
+  }, [products])
 
   useEffect(() => {
     loadProducts()
@@ -225,7 +256,6 @@ export default function Home() {
         </div>
 
         {/* Products Carousel */}
-
         {loading && products.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '4rem' }}>
             <ProgressSpinner style={{ width: '50px', height: '50px' }} />
@@ -267,10 +297,11 @@ export default function Home() {
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
               border: '1px solid rgba(255, 122, 0, 0.1)'
             }}>
-              <Carousel
-                value={productsWithImages}
-                numVisible={3}
-                numScroll={1}
+              {productsWithImages.length > 0 ? (
+                <Carousel
+                  value={productsWithImages}
+                  numVisible={3}
+                  numScroll={1}
                 responsiveOptions={[
                   {
                     breakpoint: '1024px',
@@ -319,7 +350,7 @@ export default function Home() {
                         router.push(`/catalog?category=${encodeURIComponent(product.category)}&search=${encodeURIComponent(product.name)}`)
                       }}
                     >
-                      {product.image ? (
+                      {product.image && product.image.trim() !== '' ? (
                         <img
                           src={getImageUrl(product.image)}
                           alt={product.name}
@@ -331,21 +362,25 @@ export default function Home() {
                             height: '100%',
                             objectFit: 'cover'
                           }}
+                          loading="lazy"
                           onError={(e) => {
-                            console.error('Error cargando imagen del producto:', product.name, 'Ruta original:', product.image, 'URL generada:', getImageUrl(product.image))
+                            console.error('❌ Error cargando imagen del producto:', product.name)
+                            console.error('   Ruta original:', product.image)
+                            console.error('   URL generada:', getImageUrl(product.image))
+                            console.error('   💡 Si usaste una URL de página web, necesitas la URL directa de la imagen')
                             e.target.style.display = 'none'
                             e.target.onerror = null // Evitar loop infinito
                             const placeholder = e.target.parentElement.querySelector('.image-placeholder')
                             if (!placeholder) {
                               const div = document.createElement('div')
                               div.className = 'image-placeholder'
-                              div.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8;'
+                              div.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8; background: linear-gradient(135deg, #f8f9fa, #e9ecef);'
                               div.innerHTML = '<i class="pi pi-image" style="font-size: 3rem;"></i>'
                               e.target.parentElement.appendChild(div)
                             }
                           }}
                           onLoad={() => {
-                            console.log('Imagen cargada exitosamente para:', product.name, 'URL:', getImageUrl(product.image))
+                            console.log('✅ Imagen cargada exitosamente para:', product.name, 'URL:', getImageUrl(product.image))
                           }}
                         />
                       ) : (
@@ -358,9 +393,13 @@ export default function Home() {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          color: '#94a3b8'
+                          color: '#94a3b8',
+                          background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)'
                         }}>
-                          <i className="pi pi-image" style={{ fontSize: '3rem' }}></i>
+                          <div style={{ textAlign: 'center' }}>
+                            <i className="pi pi-image" style={{ fontSize: '3rem', display: 'block', marginBottom: '0.5rem' }}></i>
+                            <span style={{ fontSize: '0.75rem' }}>Sin imagen</span>
+                          </div>
                         </div>
                       )}
                       {/* Badge de categoría */}
@@ -442,11 +481,21 @@ export default function Home() {
                     </div>
                   </div>
                 )}
-                autoplayInterval={4000}
-                circular
-                showIndicators={true}
-                showNavigators={true}
-              />
+                  autoplayInterval={4000}
+                  circular
+                  showIndicators={true}
+                  showNavigators={true}
+                />
+              ) : (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: '3rem',
+                  color: '#64748b'
+                }}>
+                  <i className="pi pi-image" style={{ fontSize: '3rem', marginBottom: '1rem', display: 'block' }}></i>
+                  <p>No hay productos para mostrar en el carrusel</p>
+                </div>
+              )}
             </div>
           </div>
         ) : (
