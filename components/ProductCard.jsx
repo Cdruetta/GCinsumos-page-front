@@ -5,77 +5,59 @@ import { Card } from 'primereact/card'
 import { Button } from 'primereact/button'
 import { Tag } from 'primereact/tag'
 import { useCart } from '@/lib/cart-context'
-
-// Función helper para obtener la URL completa de la imagen
-const getImageUrl = (imagePath) => {
-  if (!imagePath) return '/placeholder.svg'
-  
-  // Si ya es una URL completa (http/https), validar que sea una imagen
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    // Verificar que no sea una URL de página HTML
-    // Las URLs de imágenes suelen tener extensiones de imagen o rutas específicas
-    const isImageUrl = imagePath.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)(\?|#|$)/i) ||
-                      imagePath.includes('/image/') ||
-                      imagePath.includes('/img/') ||
-                      imagePath.includes('/uploads/') ||
-                      imagePath.includes('/media/') ||
-                      imagePath.includes('/assets/') ||
-                      imagePath.includes('i.imgur.com') ||
-                      imagePath.includes('res.cloudinary.com')
-    
-    // Si tiene ? o # y no parece ser una imagen, probablemente es una página web
-    if ((imagePath.includes('?') || imagePath.includes('#')) && !isImageUrl) {
-      console.warn('⚠️ URL parece ser una página web, no una imagen:', imagePath)
-      console.warn('💡 Necesitas la URL directa de la imagen. Ver: COMO_OBTENER_URL_IMAGEN.md')
-      return '/placeholder.svg'
-    }
-    
-    return imagePath
-  }
-  
-  // Si es una ruta relativa que empieza con /, asumir que está en el backend
-  if (imagePath.startsWith('/')) {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-    return `${API_URL}${imagePath}`
-  }
-  
-  // Si es una ruta relativa sin /, agregar / y usar el backend
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-  return `${API_URL}/${imagePath}`
-}
+import { buildImageUrl } from '@/lib/image-utils'
 
 export default function ProductCard({ product }) {
     const { addToCart } = useCart()
     const [isHovered, setIsHovered] = useState(false)
+    const [imageLoaded, setImageLoaded] = useState(false)
+    const [imageError, setImageError] = useState(false)
 
     const header = (
         <div style={{
             position: 'relative',
             overflow: 'hidden',
             borderRadius: '12px 12px 0 0',
-            background: '#f8f9fa'
+            background: '#f8f9fa',
+            height: '240px'
         }}>
+            {!imageLoaded && !imageError && (
+                <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)'
+                }}>
+                    <i className="pi pi-image" style={{ fontSize: '3rem', color: '#cbd5e1' }}></i>
+                </div>
+            )}
             <img
                 alt={product.name}
-                src={getImageUrl(product.image)}
+                src={imageError ? '/placeholder.svg' : buildImageUrl(product.image)}
                 style={{ 
                     width: '100%', 
                     height: '240px', 
                     objectFit: 'cover',
-                    transition: 'transform 0.4s ease',
-                    backgroundColor: '#f8f9fa'
+                    transition: 'opacity 0.3s ease, transform 0.4s ease',
+                    backgroundColor: '#f8f9fa',
+                    opacity: imageLoaded ? 1 : 0,
+                    position: 'absolute',
+                    top: 0,
+                    left: 0
                 }}
                 loading="lazy"
                 onError={(e) => {
-                    console.error('❌ Error cargando imagen del producto:', product.name)
-                    console.error('   Ruta original:', product.image)
-                    console.error('   URL generada:', getImageUrl(product.image))
-                    console.error('   💡 Si usaste una URL de página web, necesitas la URL directa de la imagen')
+                    setImageError(true)
                     e.target.src = '/placeholder.svg'
-                    e.target.onerror = null // Evitar loop infinito
+                    e.target.onerror = null
                 }}
                 onLoad={() => {
-                    console.log('✅ Imagen cargada exitosamente para:', product.name)
+                    setImageLoaded(true)
                 }}
                 onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'scale(1.1)'

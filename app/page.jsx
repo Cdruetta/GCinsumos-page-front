@@ -9,54 +9,7 @@ import { Carousel } from 'primereact/carousel'
 import Header from '../components/Header'
 import { getProducts } from '@/lib/api'
 import { products as mockProducts } from '@/lib/products-data'
-
-// Función helper para obtener la URL completa de la imagen
-const getImageUrl = (imagePath) => {
-  if (!imagePath) return '/placeholder.svg'
-  
-  // Si ya es una URL completa (http/https), validar que sea una imagen
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    // Verificar que no sea una URL de página HTML
-    // Las URLs de imágenes suelen tener extensiones de imagen o rutas específicas
-    const isImageUrl = imagePath.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)(\?|#|$)/i) ||
-                      imagePath.includes('/image/') ||
-                      imagePath.includes('/img/') ||
-                      imagePath.includes('/uploads/') ||
-                      imagePath.includes('/media/') ||
-                      imagePath.includes('/assets/') ||
-                      imagePath.includes('i.imgur.com') ||
-                      imagePath.includes('res.cloudinary.com') ||
-                      imagePath.includes('goetech.ar') ||
-                      imagePath.includes('cdn.') ||
-                      imagePath.includes('static.')
-    
-    // Si tiene ? o # y no parece ser una imagen, probablemente es una página web
-    // Pero intentar cargarla de todas formas (algunos CDNs usan query params)
-    if ((imagePath.includes('?') || imagePath.includes('#')) && !isImageUrl) {
-      // Si es de un dominio conocido de imágenes, permitirlo
-      const knownImageDomains = ['imgur.com', 'cloudinary.com', 'unsplash.com', 'pexels.com', 'pixabay.com', 'goetech.ar']
-      const isKnownDomain = knownImageDomains.some(domain => imagePath.includes(domain))
-      
-      if (!isKnownDomain) {
-        console.warn('⚠️ URL parece ser una página web, no una imagen:', imagePath)
-        console.warn('💡 Necesitas la URL directa de la imagen. Ver: COMO_OBTENER_URL_IMAGEN.md')
-        // Intentar cargarla de todas formas, el navegador decidirá
-      }
-    }
-    
-    return imagePath
-  }
-  
-  // Si es una ruta relativa que empieza con /, asumir que está en el backend
-  if (imagePath.startsWith('/')) {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-    return `${API_URL}${imagePath}`
-  }
-  
-  // Si es una ruta relativa sin /, agregar / y usar el backend
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-  return `${API_URL}/${imagePath}`
-}
+import { buildImageUrl } from '@/lib/image-utils'
 
 export default function Home() {
   const router = useRouter()
@@ -352,7 +305,7 @@ export default function Home() {
                     >
                       {product.image && product.image.trim() !== '' ? (
                         <img
-                          src={getImageUrl(product.image)}
+                          src={buildImageUrl(product.image)}
                           alt={product.name}
                           style={{
                             position: 'absolute',
@@ -364,23 +317,12 @@ export default function Home() {
                           }}
                           loading="lazy"
                           onError={(e) => {
-                            console.error('❌ Error cargando imagen del producto:', product.name)
-                            console.error('   Ruta original:', product.image)
-                            console.error('   URL generada:', getImageUrl(product.image))
-                            console.error('   💡 Si usaste una URL de página web, necesitas la URL directa de la imagen')
                             e.target.style.display = 'none'
-                            e.target.onerror = null // Evitar loop infinito
-                            const placeholder = e.target.parentElement.querySelector('.image-placeholder')
-                            if (!placeholder) {
-                              const div = document.createElement('div')
-                              div.className = 'image-placeholder'
-                              div.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8; background: linear-gradient(135deg, #f8f9fa, #e9ecef);'
-                              div.innerHTML = '<i class="pi pi-image" style="font-size: 3rem;"></i>'
-                              e.target.parentElement.appendChild(div)
-                            }
-                          }}
-                          onLoad={() => {
-                            console.log('✅ Imagen cargada exitosamente para:', product.name, 'URL:', getImageUrl(product.image))
+                            e.target.onerror = null
+                            const placeholder = document.createElement('div')
+                            placeholder.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8; background: linear-gradient(135deg, #f8f9fa, #e9ecef);'
+                            placeholder.innerHTML = '<i class="pi pi-image" style="font-size: 3rem;"></i>'
+                            e.target.parentElement.appendChild(placeholder)
                           }}
                         />
                       ) : (

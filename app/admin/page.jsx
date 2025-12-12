@@ -372,7 +372,7 @@ export default function AdminPage() {
                   fontWeight: 500
                 }}
               />
-              {hasPermission && hasPermission(ROLES.SUDO) && (
+              {hasPermission && (hasPermission(ROLES.ADMIN) || hasPermission(ROLES.SUDO)) && (
                 <Button
                   label="Usuarios"
                   icon="pi pi-users"
