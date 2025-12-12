@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense, useMemo, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { InputText } from 'primereact/inputtext'
 import { Dropdown } from 'primereact/dropdown'
@@ -24,57 +24,76 @@ function CatalogContent() {
   const [categories, setCategories] = useState([])
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'Todos')
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
-  const [loading, setLoading] = useState(true)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [isFiltering, setIsFiltering] = useState(false)
   const [error, setError] = useState(null)
   const [fallbackUsed, setFallbackUsed] = useState(false)
   const toastRef = useRef(null)
+  const previousFiltersRef = useRef({ category: '', search: '' })
 
-  useEffect(() => {
-    loadCategories()
-  }, [])
-
-  useEffect(() => {
-    loadProducts()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, searchQuery])
-
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
+      // Intentar obtener categorías de productos (compatibilidad con backend existente)
       const data = await getCategories()
-      setCategories(data)
+      // Si es un array de strings (categorías de productos), usarlo directamente
+      // Si es un array de objetos (categorías de la DB), extraer los nombres
+      const categoryNames = data.map(cat => typeof cat === 'string' ? cat : cat.name)
+      setCategories(['Todos', ...categoryNames.filter(c => c !== 'Todos')])
     } catch (err) {
       console.error('Error al cargar categorías:', err)
-      setCategories(mockCategories)
-    }
-  }
-
-  const loadProducts = async () => {
-    try {
-      setLoading(true)
-      const filters = {
-        category: selectedCategory,
-        search: searchQuery
+      // Fallback: intentar obtener categorías de productos
+      try {
+        const { getProductCategories } = await import('@/lib/api')
+        const productCats = await getProductCategories()
+        setCategories(productCats)
+      } catch (fallbackErr) {
+        console.error('Error al cargar categorías de productos:', fallbackErr)
+        setCategories(mockCategories)
       }
-      const data = await getProducts(filters)
-      // Solo actualizar si hay datos o si realmente cambió
+    }
+  }, [])
+
+  const loadProducts = useCallback(async () => {
+    const currentFilters = {
+      category: selectedCategory,
+      search: searchQuery
+    }
+    
+    // Verificar si los filtros realmente cambiaron
+    const filtersChanged = 
+      previousFiltersRef.current.category !== currentFilters.category ||
+      previousFiltersRef.current.search !== currentFilters.search
+    
+    // Usar ref para obtener el estado actual sin causar re-renders
+    setProducts(prevProducts => {
+      // Solo mostrar indicador de filtrado si ya hay productos y los filtros cambiaron
+      if (prevProducts.length > 0 && filtersChanged) {
+        setIsFiltering(true)
+      } else if (prevProducts.length === 0) {
+        setInitialLoading(true)
+      }
+      return prevProducts // Mantener productos actuales mientras carga (evita parpadeo)
+    })
+    
+    try {
+      const data = await getProducts(currentFilters)
+      // Actualizar productos de forma optimizada
       setProducts(data)
       setError(null)
       setFallbackUsed(false)
+      previousFiltersRef.current = currentFilters
     } catch (err) {
       console.error('Error al cargar productos:', err)
       // Fallback a datos mock locales
       let fallback = mockProducts
-      const filters = {
-        category: selectedCategory,
-        search: searchQuery
+      if (currentFilters.category && currentFilters.category !== 'Todos') {
+        fallback = getProductsByCategory(currentFilters.category)
       }
-      if (filters.category && filters.category !== 'Todos') {
-        fallback = getProductsByCategory(filters.category)
-      }
-      if (filters.search) {
-        fallback = searchProducts(filters.search)
+      if (currentFilters.search) {
+        fallback = searchProducts(currentFilters.search)
       }
       setProducts(fallback)
+      previousFiltersRef.current = currentFilters
       
       // Detectar si es un error de CORS
       const isCorsError = err.code === 'ERR_NETWORK' || 
@@ -101,9 +120,23 @@ function CatalogContent() {
       
       setFallbackUsed(true)
     } finally {
-      setLoading(false)
+      setInitialLoading(false)
+      setIsFiltering(false)
     }
-  }
+  }, [selectedCategory, searchQuery])
+
+  useEffect(() => {
+    loadCategories()
+  }, [loadCategories])
+
+  // Usar debounce para búsqueda y carga inmediata para categoría
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadProducts()
+    }, searchQuery ? 300 : 0) // Debounce solo para búsqueda
+
+    return () => clearTimeout(timeoutId)
+  }, [selectedCategory, searchQuery, loadProducts])
 
   return (
     <div>
@@ -318,7 +351,7 @@ function CatalogContent() {
           <Message severity="error" text={error} style={{ marginBottom: '1rem', width: '100%' }} />
         )}
 
-        {loading ? (
+        {initialLoading && products.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '4rem' }}>
             <ProgressSpinner style={{ width: '50px', height: '50px' }} />
           </div>
@@ -330,6 +363,9 @@ function CatalogContent() {
               alignItems: 'center',
               gap: '0.5rem'
             }}>
+              {isFiltering && (
+                <ProgressSpinner style={{ width: '20px', height: '20px' }} />
+              )}
               <span style={{
                 fontSize: '1rem',
                 color: '#64748b',
@@ -338,17 +374,13 @@ function CatalogContent() {
                 Mostrando {products.length} {products.length === 1 ? 'artículo' : 'artículos'}
               </span>
             </div>
-            <div className="grid grid-cols-3">
-              {products.map((product, index) => (
-                <div
-                  key={product.id}
-                  style={{
-                    animationDelay: `${index * 0.1}s`,
-                    animation: 'fadeInUp 0.6s ease-out forwards'
-                  }}
-                >
-                  <ProductCard product={product} />
-                </div>
+            <div className="grid grid-cols-3" style={{ 
+              opacity: isFiltering ? 0.6 : 1,
+              transition: 'opacity 0.15s ease',
+              pointerEvents: isFiltering ? 'none' : 'auto'
+            }}>
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
               ))}
             </div>
           </>

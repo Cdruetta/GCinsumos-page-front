@@ -372,24 +372,25 @@ export default function LoginPage() {
                 : 'linear-gradient(135deg, #ff7a00, #ff9f4d)',
               border: 'none',
               fontWeight: 600,
-              padding: '0.75rem 1.5rem',
+              padding: '0.875rem 1.75rem',
               borderRadius: '12px',
               boxShadow: locked 
                 ? 'none' 
                 : '0 4px 12px rgba(255, 122, 0, 0.3)',
               transition: 'all 0.3s ease',
-              fontSize: '1rem'
+              fontSize: '1rem',
+              minHeight: '48px'
             }}
             disabled={loading || locked}
             onMouseEnter={(e) => {
-              if (!loading) {
+              if (!loading && !locked) {
                 e.currentTarget.style.transform = 'translateY(-2px)'
                 e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 122, 0, 0.4)'
               }
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 122, 0, 0.3)'
+              e.currentTarget.style.boxShadow = locked ? 'none' : '0 4px 12px rgba(255, 122, 0, 0.3)'
             }}
           />
         </form>

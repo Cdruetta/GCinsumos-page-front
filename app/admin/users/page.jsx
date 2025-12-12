@@ -350,14 +350,20 @@ export default function UsersPage() {
               label="Nuevo Usuario"
               icon="pi pi-plus"
               onClick={openNew}
-              style={{ whiteSpace: 'nowrap' }}
+              style={{ 
+                whiteSpace: 'nowrap',
+                padding: '0.75rem 1.5rem',
+                minHeight: '44px',
+                fontSize: '0.95rem',
+                fontWeight: 500
+              }}
             />
           </div>
 
           <Card>
             <DataTable
               value={users}
-              loading={loading}
+              loading={loading && users.length === 0}
               paginator
               rows={10}
               emptyMessage="No hay usuarios"
@@ -446,8 +452,34 @@ export default function UsersPage() {
           )}
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
-            <Button label="Cancelar" icon="pi pi-times" onClick={hideDialog} className="p-button-text" />
-            <Button label="Guardar" icon="pi pi-check" onClick={saveUser} />
+            <Button 
+              label="Cancelar" 
+              icon="pi pi-times" 
+              onClick={hideDialog} 
+              className="p-button-outlined"
+              style={{
+                borderRadius: '12px',
+                padding: '0.75rem 1.5rem',
+                minHeight: '44px',
+                fontSize: '0.95rem',
+                fontWeight: 500
+              }}
+            />
+            <Button 
+              label="Guardar" 
+              icon="pi pi-check" 
+              onClick={saveUser}
+              style={{
+                background: 'linear-gradient(135deg, #ff7a00, #ff9f4d)',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '0.75rem 1.5rem',
+                fontWeight: 600,
+                minHeight: '44px',
+                fontSize: '0.95rem',
+                boxShadow: '0 2px 8px rgba(255, 122, 0, 0.25)'
+              }}
+            />
           </div>
         </div>
       </Dialog>

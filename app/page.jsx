@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ProgressSpinner } from 'primereact/progressspinner'
 import { Message } from 'primereact/message'
@@ -37,6 +37,12 @@ export default function Home() {
   const [fallbackUsed, setFallbackUsed] = useState(false)
   const toastRef = useRef(null)
 
+  // Memoizar productos con imágenes para evitar recálculos y parpadeo
+  const productsWithImages = useMemo(() => 
+    products.filter(p => p.image).slice(0, 10),
+    [products]
+  )
+
   useEffect(() => {
     loadProducts()
   }, [])
@@ -45,6 +51,7 @@ export default function Home() {
     try {
       setLoading(true)
       const data = await getProducts({})
+      // Actualizar productos sin causar parpadeo
       setProducts(data)
       setFallbackUsed(false)
     } catch (err) {
@@ -219,7 +226,7 @@ export default function Home() {
 
         {/* Products Carousel */}
 
-        {loading ? (
+        {loading && products.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '4rem' }}>
             <ProgressSpinner style={{ width: '50px', height: '50px' }} />
           </div>
@@ -261,7 +268,7 @@ export default function Home() {
               border: '1px solid rgba(255, 122, 0, 0.1)'
             }}>
               <Carousel
-                value={products.filter(p => p.image)} // Solo productos con imagen
+                value={productsWithImages}
                 numVisible={3}
                 numScroll={1}
                 responsiveOptions={[

@@ -62,15 +62,20 @@ export default function ProductCard({ product }) {
                     width: '100%', 
                     height: '240px', 
                     objectFit: 'cover',
-                    transition: 'transform 0.4s ease'
+                    transition: 'transform 0.4s ease',
+                    backgroundColor: '#f8f9fa'
                 }}
+                loading="lazy"
                 onError={(e) => {
-                    console.error('Error cargando imagen del producto:', product.name, 'Ruta original:', product.image, 'URL generada:', getImageUrl(product.image))
+                    console.error('❌ Error cargando imagen del producto:', product.name)
+                    console.error('   Ruta original:', product.image)
+                    console.error('   URL generada:', getImageUrl(product.image))
+                    console.error('   💡 Si usaste una URL de página web, necesitas la URL directa de la imagen')
                     e.target.src = '/placeholder.svg'
                     e.target.onerror = null // Evitar loop infinito
                 }}
                 onLoad={() => {
-                    console.log('Imagen cargada exitosamente para:', product.name, 'URL:', getImageUrl(product.image))
+                    console.log('✅ Imagen cargada exitosamente para:', product.name)
                 }}
                 onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'scale(1.1)'

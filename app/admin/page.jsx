@@ -18,9 +18,9 @@ import Header from '../../components/Header'
 import { useAuth } from '@/lib/auth-context'
 import { ROLES } from '@/lib/users-context'
 import { categories } from '@/lib/products-data'
-import { getProducts, createProduct, updateProduct, deleteProduct, updateStock } from '@/lib/api'
+import { getProducts, createProduct, updateProduct, deleteProduct, updateStock, getProductCategories } from '@/lib/api'
 
-const PRODUCT_CATEGORIES = categories.filter(cat => cat !== 'Todos')
+// PRODUCT_CATEGORIES se cargará dinámicamente desde la API
 
 // Función helper para obtener la URL completa de la imagen
 const getImageUrl = (imagePath) => {
@@ -47,6 +47,7 @@ export default function AdminPage() {
   const { isAuthenticated, logout, hasPermission, mounted } = useAuth()
   const [products, setProducts] = useState([])
   const [filteredProducts, setFilteredProducts] = useState([])
+  const [productCategories, setProductCategories] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [dialogVisible, setDialogVisible] = useState(false)
@@ -63,6 +64,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (mounted && isAuthenticated) {
+      loadCategories()
       loadProducts()
     }
     // Si está montado pero no autenticado, redirigir al home
@@ -107,6 +109,18 @@ export default function AdminPage() {
     )
   }
 
+  const loadCategories = async () => {
+    try {
+      const data = await getProductCategories()
+      // Filtrar 'Todos' y usar solo las categorías reales
+      setProductCategories(data.filter(cat => cat !== 'Todos'))
+    } catch (error) {
+      console.error('Error al cargar categorías:', error)
+      // Fallback a categorías hardcodeadas
+      setProductCategories(categories.filter(cat => cat !== 'Todos'))
+    }
+  }
+
   const loadProducts = async () => {
     try {
       setLoading(true)
@@ -120,21 +134,26 @@ export default function AdminPage() {
     }
   }
 
-  // Filtrar productos por búsqueda
+  // Filtrar productos por búsqueda (optimizado para evitar parpadeo)
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredProducts(products)
       return
     }
 
-    const query = searchQuery.toLowerCase().trim()
-    const filtered = products.filter(product => 
-      product.name.toLowerCase().includes(query) ||
-      product.category.toLowerCase().includes(query) ||
-      product.description?.toLowerCase().includes(query) ||
-      product.price.toString().includes(query)
-    )
-    setFilteredProducts(filtered)
+    // Usar debounce para evitar filtrado excesivo mientras se escribe
+    const timeoutId = setTimeout(() => {
+      const query = searchQuery.toLowerCase().trim()
+      const filtered = products.filter(product => 
+        product.name.toLowerCase().includes(query) ||
+        product.category.toLowerCase().includes(query) ||
+        product.description?.toLowerCase().includes(query) ||
+        product.price.toString().includes(query)
+      )
+      setFilteredProducts(filtered)
+    }, 200) // Pequeño debounce para suavizar el filtrado
+
+    return () => clearTimeout(timeoutId)
   }, [searchQuery, products])
 
   const openNew = () => {
@@ -330,7 +349,26 @@ export default function AdminPage() {
                 label="Nuevo Producto"
                 icon="pi pi-plus"
                 onClick={openNew}
-                style={{ whiteSpace: 'nowrap' }}
+                style={{ 
+                  whiteSpace: 'nowrap',
+                  padding: '0.75rem 1.5rem',
+                  minHeight: '44px',
+                  fontSize: '0.95rem',
+                  fontWeight: 500
+                }}
+              />
+              <Button
+                label="Categorías"
+                icon="pi pi-tags"
+                className="p-button-outlined"
+                onClick={() => router.push('/admin/categories')}
+                style={{ 
+                  whiteSpace: 'nowrap',
+                  padding: '0.75rem 1.5rem',
+                  minHeight: '44px',
+                  fontSize: '0.95rem',
+                  fontWeight: 500
+                }}
               />
               {hasPermission && hasPermission(ROLES.SUDO) && (
                 <Button
@@ -338,7 +376,13 @@ export default function AdminPage() {
                   icon="pi pi-users"
                   className="p-button-outlined"
                   onClick={() => router.push('/admin/users')}
-                  style={{ whiteSpace: 'nowrap' }}
+                  style={{ 
+                    whiteSpace: 'nowrap',
+                    padding: '0.75rem 1.5rem',
+                    minHeight: '44px',
+                    fontSize: '0.95rem',
+                    fontWeight: 500
+                  }}
                 />
               )}
               <Button
@@ -355,7 +399,13 @@ export default function AdminPage() {
                     window.location.href = '/'
                   }
                 }}
-                style={{ whiteSpace: 'nowrap' }}
+                style={{ 
+                  whiteSpace: 'nowrap',
+                  padding: '0.75rem 1.5rem',
+                  minHeight: '44px',
+                  fontSize: '0.95rem',
+                  fontWeight: 500
+                }}
               />
             </div>
           </div>
@@ -422,7 +472,12 @@ export default function AdminPage() {
                   icon="pi pi-times"
                   className="p-button-outlined"
                   onClick={() => setSearchQuery('')}
-                  style={{ marginTop: '1.75rem' }}
+                  style={{ 
+                    marginTop: '1.75rem',
+                    padding: '0.625rem 1.25rem',
+                    minHeight: '40px',
+                    fontSize: '0.9rem'
+                  }}
                 />
               )}
             </div>
@@ -437,7 +492,7 @@ export default function AdminPage() {
           <Card>
             <DataTable
               value={filteredProducts}
-              loading={loading}
+              loading={loading && products.length === 0}
               paginator
               rows={10}
               emptyMessage={searchQuery ? "No se encontraron productos" : "No hay productos"}
@@ -518,7 +573,10 @@ export default function AdminPage() {
                 id="category"
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.value })}
-                options={PRODUCT_CATEGORIES.map(cat => ({ label: cat, value: cat }))}
+                options={productCategories.length > 0 
+                  ? productCategories.map(cat => ({ label: cat, value: cat }))
+                  : categories.filter(cat => cat !== 'Todos').map(cat => ({ label: cat, value: cat }))
+                }
                 placeholder="Selecciona una categoría"
                 style={{ 
                   width: '100%',
@@ -692,7 +750,10 @@ export default function AdminPage() {
                 className="p-button-outlined"
                 style={{
                   borderRadius: '12px',
-                  padding: '0.6rem 1.2rem'
+                  padding: '0.75rem 1.5rem',
+                  minHeight: '44px',
+                  fontSize: '0.95rem',
+                  fontWeight: 500
                 }}
               />
               <Button 
@@ -704,8 +765,11 @@ export default function AdminPage() {
                   background: 'linear-gradient(135deg, #ff7a00, #ff9f4d)',
                   border: 'none',
                   borderRadius: '12px',
-                  padding: '0.6rem 1.2rem',
-                  fontWeight: 600
+                  padding: '0.75rem 1.5rem',
+                  fontWeight: 600,
+                  minHeight: '44px',
+                  fontSize: '0.95rem',
+                  boxShadow: '0 2px 8px rgba(255, 122, 0, 0.25)'
                 }}
               />
             </div>
