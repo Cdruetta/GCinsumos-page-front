@@ -40,16 +40,16 @@ export default function Home() {
       setFallbackUsed(false)
     } catch (err) {
       console.error('Error al cargar productos:', err)
-      
+
       // Detectar si es un error de CORS
-      const isCorsError = err.code === 'ERR_NETWORK' || 
-                         err.message?.includes('CORS') ||
-                         err.message === 'Network Error'
-      
+      const isCorsError = err.code === 'ERR_NETWORK' ||
+        err.message?.includes('CORS') ||
+        err.message === 'Network Error'
+
       // Fallback a datos mock locales
       setProducts(mockProducts)
       setFallbackUsed(true)
-      
+
       if (isCorsError) {
         toastRef.current?.show({
           severity: 'error',
@@ -77,7 +77,7 @@ export default function Home() {
 
       <div className="container">
         {/* Hero Section */}
-        <div 
+        <div
           className="fade-in-up hero-section"
           style={{
             marginBottom: '3rem',
@@ -112,8 +112,8 @@ export default function Home() {
             background: 'radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)',
             borderRadius: '50%'
           }} />
-          
-          <div 
+
+          <div
             className="hero-logo"
             style={{
               width: 140,
@@ -140,11 +140,11 @@ export default function Home() {
             />
           </div>
           <div style={{ flex: 1, position: 'relative', zIndex: 1 }}>
-            <h1 
+            <h1
               className="hero-title"
-              style={{ 
-                fontSize: '3rem', 
-                fontWeight: '900', 
+              style={{
+                fontSize: '3rem',
+                fontWeight: '900',
                 marginBottom: '0.75rem',
                 lineHeight: 1.1,
                 textShadow: '0 2px 10px rgba(0,0,0,0.1)',
@@ -153,11 +153,11 @@ export default function Home() {
             >
               Monta tu setup soñado
             </h1>
-            <p 
+            <p
               className="hero-description"
-              style={{ 
-                fontSize: '1.2rem', 
-                opacity: 0.95, 
+              style={{
+                fontSize: '1.2rem',
+                opacity: 0.95,
                 marginBottom: '1.5rem',
                 lineHeight: 1.5,
                 fontWeight: 400
@@ -196,9 +196,9 @@ export default function Home() {
               <Message
                 severity="warn"
                 text="Mostrando datos de ejemplo porque el backend no está disponible."
-                style={{ 
-                  marginTop: '1.25rem', 
-                  background: 'rgba(255,255,255,0.2)', 
+                style={{
+                  marginTop: '1.25rem',
+                  background: 'rgba(255,255,255,0.2)',
                   border: 'none',
                   borderRadius: '12px',
                   backdropFilter: 'blur(10px)'
@@ -215,7 +215,7 @@ export default function Home() {
           </div>
         ) : products.length > 0 ? (
           <div className="fade-in-up" style={{ marginBottom: '2rem' }}>
-            <div style={{ 
+            <div style={{
               marginBottom: '1.5rem',
               display: 'flex',
               alignItems: 'center',
@@ -225,8 +225,8 @@ export default function Home() {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <i className="pi pi-images" style={{ fontSize: '1.25rem', color: '#ff7a00' }}></i>
-                <h2 style={{ 
-                  fontSize: '1.5rem', 
+                <h2 style={{
+                  fontSize: '1.5rem',
                   fontWeight: 700,
                   color: '#1e293b',
                   margin: 0
@@ -234,15 +234,15 @@ export default function Home() {
                   Productos Destacados
                 </h2>
               </div>
-              <span style={{ 
-                fontSize: '0.95rem', 
+              <span style={{
+                fontSize: '0.95rem',
                 color: '#64748b',
                 fontWeight: 500
               }}>
                 {products.length} {products.length === 1 ? 'producto' : 'productos'}
               </span>
             </div>
-            
+
             <div style={{
               background: '#fff',
               borderRadius: '20px',
@@ -255,182 +255,183 @@ export default function Home() {
                   value={productsWithImages}
                   numVisible={3}
                   numScroll={1}
-                responsiveOptions={[
-                  {
-                    breakpoint: '1024px',
-                    numVisible: 2,
-                    numScroll: 1
-                  },
-                  {
-                    breakpoint: '768px',
-                    numVisible: 1,
-                    numScroll: 1
-                  }
-                ]}
-                itemTemplate={(product) => (
-                  <div
-                    key={product.id}
-                    style={{
-                      padding: '0.75rem',
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column'
-                    }}
-                  >
+                  responsiveOptions={[
+                    {
+                      breakpoint: '1024px',
+                      numVisible: 2,
+                      numScroll: 1
+                    },
+                    {
+                      breakpoint: '768px',
+                      numVisible: 1,
+                      numScroll: 1
+                    }
+                  ]}
+                  itemTemplate={(product) => (
                     <div
+                      key={product.id}
                       style={{
-                        position: 'relative',
-                        width: '100%',
-                        paddingTop: '75%', // Aspect ratio 4:3
-                        background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)',
-                        borderRadius: '16px',
-                        overflow: 'hidden',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                        marginBottom: '1rem'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-4px)'
-                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(255, 122, 0, 0.2)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)'
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)'
-                      }}
-                      onClick={() => {
-                        // Navegar al catálogo con filtros aplicados
-                        router.push(`/catalog?category=${encodeURIComponent(product.category)}&search=${encodeURIComponent(product.name)}`)
+                        padding: '0.75rem',
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column'
                       }}
                     >
-                      {product.image && product.image.trim() !== '' ? (
-                        <img
-                          src={buildImageUrl(product.image)}
-                          alt={product.name}
-                          style={{
+                      <div
+                        style={{
+                          position: 'relative',
+                          width: '100%',
+                          paddingTop: '75%', // Aspect ratio 4:3
+                          background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)',
+                          borderRadius: '16px',
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                          marginBottom: '1rem'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-4px)'
+                          e.currentTarget.style.boxShadow = '0 8px 24px rgba(255, 122, 0, 0.2)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)'
+                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)'
+                        }}
+                        onClick={() => {
+                          // Navegar al catálogo con filtros aplicados
+                          router.push(`/catalog?category=${encodeURIComponent(product.category)}&search=${encodeURIComponent(product.name)}`)
+                        }}
+                      >
+                        {product.image && product.image.trim() !== '' ? (
+                          <img
+                            src={buildImageUrl(product.image)}
+                            alt={product.name}
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'contain',
+                              padding: '1rem'
+                            }}
+                            loading="lazy"
+                            onError={(e) => {
+                              e.target.style.display = 'none'
+                              e.target.onerror = null
+                              const placeholder = document.createElement('div')
+                              placeholder.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8; background: linear-gradient(135deg, #f8f9fa, #e9ecef);'
+                              placeholder.innerHTML = '<i class="pi pi-image" style="font-size: 3rem;"></i>'
+                              e.target.parentElement.appendChild(placeholder)
+                            }}
+                          />
+                        ) : (
+                          <div style={{
                             position: 'absolute',
                             top: 0,
                             left: 0,
                             width: '100%',
                             height: '100%',
-                            objectFit: 'cover'
-                          }}
-                          loading="lazy"
-                          onError={(e) => {
-                            e.target.style.display = 'none'
-                            e.target.onerror = null
-                            const placeholder = document.createElement('div')
-                            placeholder.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8; background: linear-gradient(135deg, #f8f9fa, #e9ecef);'
-                            placeholder.innerHTML = '<i class="pi pi-image" style="font-size: 3rem;"></i>'
-                            e.target.parentElement.appendChild(placeholder)
-                          }}
-                        />
-                      ) : (
-                        <div style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          width: '100%',
-                          height: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#94a3b8',
-                          background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)'
-                        }}>
-                          <div style={{ textAlign: 'center' }}>
-                            <i className="pi pi-image" style={{ fontSize: '3rem', display: 'block', marginBottom: '0.5rem' }}></i>
-                            <span style={{ fontSize: '0.75rem' }}>Sin imagen</span>
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#94a3b8',
+                            background: 'linear-gradient(135deg, #f8f9fa, #e9ecef)'
+                          }}>
+                            <div style={{ textAlign: 'center' }}>
+                              <i className="pi pi-image" style={{ fontSize: '3rem', display: 'block', marginBottom: '0.5rem' }}></i>
+                              <span style={{ fontSize: '0.75rem' }}>Sin imagen</span>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      {/* Badge de categoría */}
-                      <div style={{
-                        position: 'absolute',
-                        top: '0.75rem',
-                        right: '0.75rem',
-                        background: 'linear-gradient(135deg, #ff7a00, #ff9f4d)',
-                        color: '#fff',
-                        padding: '0.375rem 0.75rem',
-                        borderRadius: '20px',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
-                      }}>
-                        {product.category}
-                      </div>
-                      {/* Badge de stock */}
-                      {product.stock > 0 && (
+                        )}
+                        {/* Badge de categoría */}
                         <div style={{
                           position: 'absolute',
-                          bottom: '0.75rem',
-                          left: '0.75rem',
-                          background: 'rgba(255, 255, 255, 0.95)',
-                          backdropFilter: 'blur(10px)',
+                          top: '0.75rem',
+                          right: '0.75rem',
+                          background: 'linear-gradient(135deg, #ff7a00, #ff9f4d)',
+                          color: '#fff',
                           padding: '0.375rem 0.75rem',
                           borderRadius: '20px',
                           fontSize: '0.75rem',
                           fontWeight: 600,
-                          color: '#059669',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
                         }}>
-                          <i className="pi pi-check-circle" style={{ fontSize: '0.75rem' }}></i>
-                          En stock
+                          {product.category}
                         </div>
-                      )}
-                    </div>
-                    {/* Información del producto */}
-                    <div style={{ padding: '0 0.5rem' }}>
-                      <h3 style={{
-                        fontSize: '1rem',
-                        fontWeight: 700,
-                        color: '#1e293b',
-                        marginBottom: '0.5rem',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                      }}>
-                        {product.name}
-                      </h3>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '0.5rem'
-                      }}>
-                        <span style={{
-                          fontSize: '1.25rem',
-                          fontWeight: 800,
-                          background: 'linear-gradient(135deg, #ff7a00, #ff9f4d)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent'
-                        }}>
-                          ${product.price?.toLocaleString('es-AR') || '0'}
-                        </span>
+                        {/* Badge de stock */}
                         {product.stock > 0 && (
-                          <span style={{
-                            fontSize: '0.875rem',
-                            color: '#64748b',
-                            fontWeight: 500
+                          <div style={{
+                            position: 'absolute',
+                            bottom: '0.75rem',
+                            left: '0.75rem',
+                            background: 'rgba(255, 255, 255, 0.95)',
+                            backdropFilter: 'blur(10px)',
+                            padding: '0.375rem 0.75rem',
+                            borderRadius: '20px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            color: '#059669',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                           }}>
-                            {product.stock} disponibles
-                          </span>
+                            <i className="pi pi-check-circle" style={{ fontSize: '0.75rem' }}></i>
+                            En stock
+                          </div>
                         )}
                       </div>
+                      {/* Información del producto */}
+                      <div style={{ padding: '0 0.5rem' }}>
+                        <h3 style={{
+                          fontSize: '1rem',
+                          fontWeight: 700,
+                          color: '#1e293b',
+                          marginBottom: '0.5rem',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {product.name}
+                        </h3>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '0.5rem'
+                        }}>
+                          <span style={{
+                            fontSize: '1.25rem',
+                            fontWeight: 800,
+                            background: 'linear-gradient(135deg, #ff7a00, #ff9f4d)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent'
+                          }}>
+                            ${product.price?.toLocaleString('es-AR') || '0'}
+                          </span>
+                          {product.stock > 0 && (
+                            <span style={{
+                              fontSize: '0.875rem',
+                              color: '#64748b',
+                              fontWeight: 500
+                            }}>
+                              {product.stock} disponibles
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
                   autoplayInterval={4000}
                   circular
                   showIndicators={true}
                   showNavigators={true}
                 />
               ) : (
-                <div style={{ 
-                  textAlign: 'center', 
+                <div style={{
+                  textAlign: 'center',
                   padding: '3rem',
                   color: '#64748b'
                 }}>
@@ -441,10 +442,10 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <div 
+          <div
             className="fade-in-up"
-            style={{ 
-              textAlign: 'center', 
+            style={{
+              textAlign: 'center',
               padding: '4rem 2rem',
               background: '#fff',
               borderRadius: '20px',
@@ -463,15 +464,15 @@ export default function Home() {
             }}>
               <i className="pi pi-inbox" style={{ fontSize: '2.5rem', color: '#94a3b8' }}></i>
             </div>
-            <h3 style={{ 
-              fontSize: '1.5rem', 
+            <h3 style={{
+              fontSize: '1.5rem',
               marginBottom: '0.5rem',
               fontWeight: 700,
               color: '#1e293b'
             }}>
               No hay artículos
             </h3>
-            <p style={{ 
+            <p style={{
               color: '#64748b',
               fontSize: '1rem'
             }}>
