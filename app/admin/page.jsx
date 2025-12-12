@@ -42,8 +42,23 @@ const getImageUrl = (imagePath) => {
   return `${API_URL}/${imagePath}`
 }
 
+// Función helper para procesar URLs de imágenes (ej: convertir Google Drive)
+const processImageUrl = (url) => {
+  if (!url) return ''
+
+  // Transformar links de Google Drive a links directos
+  if (url.includes('drive.google.com') && url.includes('/file/d/')) {
+    const matches = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)
+    if (matches && matches[1]) {
+      return `https://drive.google.com/uc?export=view&id=${matches[1]}`
+    }
+  }
+  return url
+}
+
 export default function AdminPage() {
   const router = useRouter()
+
   const { isAuthenticated, logout, hasPermission, mounted } = useAuth()
   const [products, setProducts] = useState([])
   const [filteredProducts, setFilteredProducts] = useState([])
@@ -806,7 +821,10 @@ export default function AdminPage() {
                 <InputText
                   id="image"
                   value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                  onChange={(e) => {
+                    const val = processImageUrl(e.target.value)
+                    setFormData({ ...formData, image: val })
+                  }}
                   placeholder="Pega aquí la URL de la imagen (https://...) o ruta local (/uploads/...)"
                   style={{
                     flex: 1,
@@ -834,7 +852,8 @@ export default function AdminPage() {
                     try {
                       const text = await navigator.clipboard.readText()
                       if (text && (text.startsWith('http://') || text.startsWith('https://') || text.startsWith('/'))) {
-                        setFormData({ ...formData, image: text })
+                        const val = processImageUrl(text)
+                        setFormData({ ...formData, image: val })
                         toast.current.show({
                           severity: 'success',
                           summary: 'URL pegada',
