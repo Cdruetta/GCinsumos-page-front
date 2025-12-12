@@ -9,7 +9,7 @@ import { useAuth } from '@/lib/auth-context'
 
 export default function Header() {
   const { cartItems } = useCart()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, currentUser } = useAuth()
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -80,17 +80,34 @@ export default function Header() {
             />
           </div>
           <div className="header-text" style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2, minWidth: 0 }}>
-            <span style={{ 
-              fontWeight: 800, 
-              background: 'linear-gradient(135deg, #ff7a00, #ff9f4d)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              fontSize: '1.15rem',
-              letterSpacing: '-0.5px',
-              whiteSpace: 'nowrap'
-            }}>
-              GCinsumos
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <span style={{ 
+                fontWeight: 800, 
+                background: 'linear-gradient(135deg, #ff7a00, #ff9f4d)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                fontSize: '1.15rem',
+                letterSpacing: '-0.5px',
+                whiteSpace: 'nowrap'
+              }}>
+                GCinsumos
+              </span>
+              {isAuthenticated && currentUser && (
+                <span style={{
+                  fontSize: '0.9rem',
+                  color: '#64748b',
+                  fontWeight: 600,
+                  padding: '0.25rem 0.75rem',
+                  background: 'rgba(255, 122, 0, 0.1)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 122, 0, 0.2)',
+                  whiteSpace: 'nowrap'
+                }}>
+                  <i className="pi pi-user" style={{ fontSize: '0.75rem', marginRight: '0.25rem' }}></i>
+                  {currentUser.username}
+                </span>
+              )}
+            </div>
             <span className="header-subtitle" style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500, whiteSpace: 'nowrap' }}>
               Soluciones Tech
             </span>

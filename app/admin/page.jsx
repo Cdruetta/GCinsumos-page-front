@@ -18,25 +18,25 @@ import Header from '../../components/Header'
 import { useAuth } from '@/lib/auth-context'
 import { ROLES } from '@/lib/users-context'
 import { categories } from '@/lib/products-data'
-import { getProducts, createProduct, updateProduct, deleteProduct, updateStock, getProductCategories, uploadImage } from '@/lib/api'
+import { getProducts, createProduct, updateProduct, deleteProduct, updateStock, getCategories, uploadImage } from '@/lib/api'
 
 // PRODUCT_CATEGORIES se cargará dinámicamente desde la API
 
 // Función helper para obtener la URL completa de la imagen
 const getImageUrl = (imagePath) => {
   if (!imagePath) return '/placeholder.svg'
-  
+
   // Si ya es una URL completa (http/https), usarla directamente
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
     return imagePath
   }
-  
+
   // Si es una ruta relativa que empieza con /, asumir que está en el backend
   if (imagePath.startsWith('/')) {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
     return `${API_URL}${imagePath}`
   }
-  
+
   // Si es una ruta relativa sin /, agregar / y usar el backend
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
   return `${API_URL}/${imagePath}`
@@ -113,15 +113,19 @@ export default function AdminPage() {
 
   const loadCategories = async () => {
     try {
-      const data = await getProductCategories()
-      // Filtrar 'Todos' y usar solo las categorías reales
-      setProductCategories(data.filter(cat => cat !== 'Todos'))
+      const data = await getCategories()
+      console.log('Categorías recibidas de la API:', data)
+      // Extraer solo los nombres de las categorías
+      const categoryNames = data.map(cat => cat.name)
+      console.log('Nombres de categorías:', categoryNames)
+      setProductCategories(categoryNames)
     } catch (error) {
       console.error('Error al cargar categorías:', error)
       // Fallback a categorías hardcodeadas
       setProductCategories(categories.filter(cat => cat !== 'Todos'))
     }
   }
+
 
   const loadProducts = async () => {
     try {
@@ -146,7 +150,7 @@ export default function AdminPage() {
     // Usar debounce para evitar filtrado excesivo mientras se escribe
     const timeoutId = setTimeout(() => {
       const query = searchQuery.toLowerCase().trim()
-      const filtered = products.filter(product => 
+      const filtered = products.filter(product =>
         product.name.toLowerCase().includes(query) ||
         product.category.toLowerCase().includes(query) ||
         product.description?.toLowerCase().includes(query) ||
@@ -191,46 +195,46 @@ export default function AdminPage() {
   const saveProduct = async () => {
     // Validaciones
     if (!formData.name || !formData.name.trim()) {
-      toast.current.show({ 
-        severity: 'error', 
-        summary: 'Error de validación', 
-        detail: 'El nombre del producto es requerido' 
+      toast.current.show({
+        severity: 'error',
+        summary: 'Error de validación',
+        detail: 'El nombre del producto es requerido'
       })
       return
     }
 
     if (!formData.category || !formData.category.trim()) {
-      toast.current.show({ 
-        severity: 'error', 
-        summary: 'Error de validación', 
-        detail: 'La categoría es requerida' 
+      toast.current.show({
+        severity: 'error',
+        summary: 'Error de validación',
+        detail: 'La categoría es requerida'
       })
       return
     }
 
     if (!formData.description || !formData.description.trim()) {
-      toast.current.show({ 
-        severity: 'error', 
-        summary: 'Error de validación', 
-        detail: 'La descripción es requerida' 
+      toast.current.show({
+        severity: 'error',
+        summary: 'Error de validación',
+        detail: 'La descripción es requerida'
       })
       return
     }
 
     if (!formData.price || formData.price <= 0) {
-      toast.current.show({ 
-        severity: 'error', 
-        summary: 'Error de validación', 
-        detail: 'El precio debe ser mayor a 0' 
+      toast.current.show({
+        severity: 'error',
+        summary: 'Error de validación',
+        detail: 'El precio debe ser mayor a 0'
       })
       return
     }
 
     if (formData.stock < 0) {
-      toast.current.show({ 
-        severity: 'error', 
-        summary: 'Error de validación', 
-        detail: 'El stock no puede ser negativo' 
+      toast.current.show({
+        severity: 'error',
+        summary: 'Error de validación',
+        detail: 'El stock no puede ser negativo'
       })
       return
     }
@@ -331,12 +335,12 @@ export default function AdminPage() {
 
       <div className="container">
         <div style={{ marginBottom: '2rem' }}>
-          <div 
+          <div
             className="admin-header"
-            style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
               marginBottom: '1rem',
               flexWrap: 'wrap',
               gap: '1rem'
@@ -351,7 +355,7 @@ export default function AdminPage() {
                 label="Nuevo Producto"
                 icon="pi pi-plus"
                 onClick={openNew}
-                style={{ 
+                style={{
                   whiteSpace: 'nowrap',
                   padding: '0.75rem 1.5rem',
                   minHeight: '44px',
@@ -364,7 +368,7 @@ export default function AdminPage() {
                 icon="pi pi-tags"
                 className="p-button-outlined"
                 onClick={() => router.push('/admin/categories')}
-                style={{ 
+                style={{
                   whiteSpace: 'nowrap',
                   padding: '0.75rem 1.5rem',
                   minHeight: '44px',
@@ -378,7 +382,7 @@ export default function AdminPage() {
                   icon="pi pi-users"
                   className="p-button-outlined"
                   onClick={() => router.push('/admin/users')}
-                  style={{ 
+                  style={{
                     whiteSpace: 'nowrap',
                     padding: '0.75rem 1.5rem',
                     minHeight: '44px',
@@ -401,7 +405,7 @@ export default function AdminPage() {
                     window.location.href = '/'
                   }
                 }}
-                style={{ 
+                style={{
                   whiteSpace: 'nowrap',
                   padding: '0.75rem 1.5rem',
                   minHeight: '44px',
@@ -432,9 +436,9 @@ export default function AdminPage() {
           <Card style={{ marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
               <div style={{ flex: 1, minWidth: '250px' }}>
-                <label htmlFor="admin-search" style={{ 
-                  display: 'block', 
-                  marginBottom: '0.5rem', 
+                <label htmlFor="admin-search" style={{
+                  display: 'block',
+                  marginBottom: '0.5rem',
                   fontWeight: '600',
                   color: '#1e293b',
                   fontSize: '0.9rem'
@@ -474,7 +478,7 @@ export default function AdminPage() {
                   icon="pi pi-times"
                   className="p-button-outlined"
                   onClick={() => setSearchQuery('')}
-                  style={{ 
+                  style={{
                     marginTop: '1.75rem',
                     padding: '0.625rem 1.25rem',
                     minHeight: '40px',
@@ -527,8 +531,8 @@ export default function AdminPage() {
         <form onSubmit={(e) => { e.preventDefault(); saveProduct(); }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div>
-              <label htmlFor="name" style={{ 
-                display: 'block', 
+              <label htmlFor="name" style={{
+                display: 'block',
                 marginBottom: '0.5rem',
                 fontWeight: '600',
                 color: '#1e293b',
@@ -541,7 +545,7 @@ export default function AdminPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Ej: Monitor LED 27 pulgadas"
-                style={{ 
+                style={{
                   width: '100%',
                   borderRadius: '12px',
                   border: '2px solid #e2e8f0',
@@ -562,8 +566,8 @@ export default function AdminPage() {
             </div>
 
             <div>
-              <label htmlFor="category" style={{ 
-                display: 'block', 
+              <label htmlFor="category" style={{
+                display: 'block',
                 marginBottom: '0.5rem',
                 fontWeight: '600',
                 color: '#1e293b',
@@ -575,12 +579,12 @@ export default function AdminPage() {
                 id="category"
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.value })}
-                options={productCategories.length > 0 
+                options={productCategories.length > 0
                   ? productCategories.map(cat => ({ label: cat, value: cat }))
                   : categories.filter(cat => cat !== 'Todos').map(cat => ({ label: cat, value: cat }))
                 }
                 placeholder="Selecciona una categoría"
-                style={{ 
+                style={{
                   width: '100%',
                   borderRadius: '12px',
                   border: '2px solid #e2e8f0'
@@ -591,8 +595,8 @@ export default function AdminPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div>
-                <label htmlFor="price" style={{ 
-                  display: 'block', 
+                <label htmlFor="price" style={{
+                  display: 'block',
                   marginBottom: '0.5rem',
                   fontWeight: '600',
                   color: '#1e293b',
@@ -608,7 +612,7 @@ export default function AdminPage() {
                   currency="ARS"
                   locale="es-AR"
                   min={0}
-                  style={{ 
+                  style={{
                     width: '100%',
                     borderRadius: '12px',
                     border: '2px solid #e2e8f0'
@@ -618,8 +622,8 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label htmlFor="stock" style={{ 
-                  display: 'block', 
+                <label htmlFor="stock" style={{
+                  display: 'block',
                   marginBottom: '0.5rem',
                   fontWeight: '600',
                   color: '#1e293b',
@@ -632,7 +636,7 @@ export default function AdminPage() {
                   value={formData.stock}
                   onValueChange={(e) => setFormData({ ...formData, stock: e.value || 0 })}
                   min={0}
-                  style={{ 
+                  style={{
                     width: '100%',
                     borderRadius: '12px',
                     border: '2px solid #e2e8f0'
@@ -643,8 +647,8 @@ export default function AdminPage() {
             </div>
 
             <div>
-              <label htmlFor="description" style={{ 
-                display: 'block', 
+              <label htmlFor="description" style={{
+                display: 'block',
                 marginBottom: '0.5rem',
                 fontWeight: '600',
                 color: '#1e293b',
@@ -658,7 +662,7 @@ export default function AdminPage() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Describe las características principales del producto..."
                 rows={4}
-                style={{ 
+                style={{
                   width: '100%',
                   borderRadius: '12px',
                   border: '2px solid #e2e8f0',
@@ -681,8 +685,8 @@ export default function AdminPage() {
             </div>
 
             <div>
-              <label htmlFor="image" style={{ 
-                display: 'block', 
+              <label htmlFor="image" style={{
+                display: 'block',
                 marginBottom: '0.5rem',
                 fontWeight: '600',
                 color: '#1e293b',
@@ -690,7 +694,7 @@ export default function AdminPage() {
               }}>
                 Imagen del Producto
               </label>
-              
+
               {/* Opción 1: Subir archivo desde la computadora */}
               <div style={{
                 marginBottom: '1rem',
@@ -741,7 +745,7 @@ export default function AdminPage() {
 
                       const result = await uploadImage(file)
                       setFormData({ ...formData, image: result.imagePath })
-                      
+
                       toast.current.show({
                         severity: 'success',
                         summary: 'Imagen subida',
@@ -773,8 +777,8 @@ export default function AdminPage() {
                   disabled={uploadingImage}
                   style={{
                     width: '100%',
-                    background: uploadingImage 
-                      ? '#cbd5e1' 
+                    background: uploadingImage
+                      ? '#cbd5e1'
                       : 'linear-gradient(135deg, #3b82f6, #60a5fa)',
                     border: 'none',
                     color: '#fff',
@@ -799,8 +803,8 @@ export default function AdminPage() {
               </div>
 
               {/* Opción 2: Pegar URL */}
-              <div style={{ 
-                display: 'flex', 
+              <div style={{
+                display: 'flex',
                 gap: '0.5rem',
                 marginBottom: '0.5rem'
               }}>
@@ -809,7 +813,7 @@ export default function AdminPage() {
                   value={formData.image}
                   onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                   placeholder="Pega aquí la URL de la imagen (https://...) o ruta local (/uploads/...)"
-                  style={{ 
+                  style={{
                     flex: 1,
                     borderRadius: '12px',
                     border: '2px solid #e2e8f0',
@@ -878,7 +882,7 @@ export default function AdminPage() {
                   />
                 )}
               </div>
-              
+
               {/* Instrucciones */}
               <div style={{
                 marginBottom: '0.75rem',
@@ -887,16 +891,16 @@ export default function AdminPage() {
                 borderRadius: '8px',
                 border: '1px solid #e2e8f0'
               }}>
-                <p style={{ 
-                  margin: 0, 
-                  fontSize: '0.875rem', 
+                <p style={{
+                  margin: 0,
+                  fontSize: '0.875rem',
                   color: '#64748b',
                   lineHeight: 1.5
                 }}>
                   <strong style={{ color: '#1e293b' }}>💡 Cómo obtener la URL de una imagen:</strong>
                 </p>
-                <ol style={{ 
-                  margin: '0.5rem 0 0 0', 
+                <ol style={{
+                  margin: '0.5rem 0 0 0',
                   paddingLeft: '1.25rem',
                   fontSize: '0.875rem',
                   color: '#64748b',
@@ -906,9 +910,9 @@ export default function AdminPage() {
                   <li>Selecciona "Copiar dirección de imagen" o "Copy image address"</li>
                   <li>Pega la URL aquí o usa el botón "Pegar URL"</li>
                 </ol>
-                <p style={{ 
-                  margin: '0.5rem 0 0 0', 
-                  fontSize: '0.875rem', 
+                <p style={{
+                  margin: '0.5rem 0 0 0',
+                  fontSize: '0.875rem',
                   color: '#f59e0b',
                   fontWeight: 500
                 }}>
@@ -918,16 +922,16 @@ export default function AdminPage() {
 
               {/* Vista previa */}
               {formData.image && (
-                <div style={{ 
+                <div style={{
                   marginTop: '0.75rem',
                   padding: '1rem',
                   background: '#f8fafc',
                   borderRadius: '12px',
                   border: '1px solid #e2e8f0'
                 }}>
-                  <p style={{ 
-                    margin: '0 0 0.75rem 0', 
-                    fontSize: '0.875rem', 
+                  <p style={{
+                    margin: '0 0 0.75rem 0',
+                    fontSize: '0.875rem',
                     fontWeight: 600,
                     color: '#1e293b'
                   }}>
@@ -945,12 +949,12 @@ export default function AdminPage() {
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
-                    <img 
-                      src={getImageUrl(formData.image)} 
-                      alt="Vista previa" 
-                      style={{ 
-                        maxWidth: '100%', 
-                        maxHeight: '200px', 
+                    <img
+                      src={getImageUrl(formData.image)}
+                      alt="Vista previa"
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '200px',
                         borderRadius: '6px',
                         objectFit: 'contain'
                       }}
@@ -974,9 +978,9 @@ export default function AdminPage() {
                       }}
                     />
                   </div>
-                  <p style={{ 
-                    margin: '0.5rem 0 0 0', 
-                    fontSize: '0.75rem', 
+                  <p style={{
+                    margin: '0.5rem 0 0 0',
+                    fontSize: '0.75rem',
                     color: '#64748b',
                     wordBreak: 'break-all'
                   }}>
@@ -986,18 +990,18 @@ export default function AdminPage() {
               )}
             </div>
 
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'flex-end', 
-              gap: '0.75rem', 
+            <div style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '0.75rem',
               marginTop: '0.5rem',
               paddingTop: '1rem',
               borderTop: '1px solid #e2e8f0'
             }}>
-              <Button 
-                label="Cancelar" 
-                icon="pi pi-times" 
-                onClick={hideDialog} 
+              <Button
+                label="Cancelar"
+                icon="pi pi-times"
+                onClick={hideDialog}
                 className="p-button-outlined"
                 style={{
                   borderRadius: '12px',
@@ -1007,10 +1011,10 @@ export default function AdminPage() {
                   fontWeight: 500
                 }}
               />
-              <Button 
+              <Button
                 type="submit"
-                label="Guardar" 
-                icon="pi pi-check" 
+                label="Guardar"
+                icon="pi pi-check"
                 onClick={saveProduct}
                 style={{
                   background: 'linear-gradient(135deg, #ff7a00, #ff9f4d)',

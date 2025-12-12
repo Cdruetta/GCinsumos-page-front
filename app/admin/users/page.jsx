@@ -21,7 +21,6 @@ export default function UsersPage() {
   const router = useRouter()
   const { isAuthenticated, currentUser, hasPermission, mounted } = useAuth()
   const { users, createUser, updateUser, deleteUser, toggleUserStatus, loadUsers, mounted: usersMounted, loading: usersLoading } = useUsers()
-  const [loading, setLoading] = useState(true)
   const [dialogVisible, setDialogVisible] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
   const [formData, setFormData] = useState({
@@ -37,37 +36,8 @@ export default function UsersPage() {
       router.push('/admin/login')
       return
     }
-    if (mounted && isAuthenticated) {
-      // Todos los usuarios ADMIN pueden gestionar usuarios
-      // Cargar usuarios desde la API cuando la página se monta
-      if (loadUsers && usersMounted) {
-        loadUsers().then(() => {
-          console.log('✅ Usuarios cargados desde la DB:', users.length)
-          setLoading(false)
-        }).catch((error) => {
-          console.error('❌ Error al cargar usuarios:', error)
-          toast.current?.show({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Error al cargar usuarios desde la base de datos',
-            life: 5000
-          })
-          setLoading(false)
-        })
-      } else if (usersMounted) {
-        // Si ya están cargados, solo actualizar el estado
-        console.log('📋 Usuarios ya cargados:', users.length)
-        setLoading(false)
-      }
-    }
-  }, [isAuthenticated, mounted, hasPermission, router, loadUsers, usersMounted, users.length])
-  
-  // Efecto adicional para recargar cuando cambien los usuarios del contexto
-  useEffect(() => {
-    if (usersMounted && users.length > 0) {
-      console.log('👥 Usuarios disponibles:', users.map(u => ({ id: u.id, username: u.username, role: u.role })))
-    }
-  }, [users, usersMounted])
+    // El contexto de usuarios ya carga automáticamente, no necesitamos cargar manualmente aquí
+  }, [mounted, isAuthenticated, router])
 
   if (!mounted || !isAuthenticated || !usersMounted) {
     return (
@@ -377,7 +347,7 @@ export default function UsersPage() {
               <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>
                 Total de usuarios: <strong style={{ color: '#1e293b' }}>{users.length}</strong>
               </p>
-              {users.length === 0 && !loading && (
+              {users.length === 0 && !usersLoading && usersMounted && (
                 <p style={{ margin: 0, color: '#f59e0b', fontSize: '0.875rem' }}>
                   ⚠️ No hay usuarios en la base de datos
                 </p>
@@ -385,10 +355,10 @@ export default function UsersPage() {
             </div>
             <DataTable
               value={users || []}
-              loading={loading || usersLoading}
+              loading={usersLoading}
               paginator
               rows={10}
-              emptyMessage={loading || usersLoading ? "Cargando usuarios desde la base de datos..." : "No hay usuarios. Crea uno nuevo para comenzar."}
+              emptyMessage={usersLoading ? "Cargando usuarios desde la base de datos..." : "No hay usuarios. Crea uno nuevo para comenzar."}
             >
               <Column 
                 field="id" 
@@ -527,4 +497,5 @@ export default function UsersPage() {
     </div>
   )
 }
+
 
