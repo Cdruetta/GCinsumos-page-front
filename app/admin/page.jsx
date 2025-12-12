@@ -322,9 +322,8 @@ export default function AdminPage() {
   }
 
   const stats = {
-    totalProducts: products.length,
-    lowStock: products.filter(p => p.stock < 10).length,
-    totalValue: products.reduce((sum, p) => sum + p.price * p.stock, 0)
+    totalProducts: filteredProducts.length,
+    totalValue: filteredProducts.reduce((sum, p) => sum + (p.price * p.stock), 0)
   }
 
   return (
@@ -417,18 +416,14 @@ export default function AdminPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 admin-stats" style={{ marginBottom: '2rem' }}>
+          <div className="grid grid-cols-2 admin-stats" style={{ marginBottom: '2rem' }}>
             <Card>
               <p style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem' }}>Total de Productos</p>
               <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#2196F3' }}>{stats.totalProducts}</p>
             </Card>
             <Card>
-              <p style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem' }}>Stock Bajo</p>
-              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f44336' }}>{stats.lowStock}</p>
-            </Card>
-            <Card>
               <p style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem' }}>Valor Total en Stock</p>
-              <p style={{ fontSize: '2rem', fontWeight: 'bold' }}>${Math.round(stats.totalValue / 1000000)}M</p>
+              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#4caf50' }}>${stats.totalValue.toLocaleString('es-AR')}</p>
             </Card>
           </div>
 
@@ -1012,7 +1007,6 @@ export default function AdminPage() {
                 }}
               />
               <Button
-                type="submit"
                 label="Guardar"
                 icon="pi pi-check"
                 onClick={saveProduct}
