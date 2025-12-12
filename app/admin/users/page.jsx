@@ -20,7 +20,7 @@ import { useUsers, ROLES } from '@/lib/users-context'
 export default function UsersPage() {
   const router = useRouter()
   const { isAuthenticated, currentUser, hasPermission, mounted } = useAuth()
-  const { users, createUser, updateUser, deleteUser, toggleUserStatus, loadUsers, mounted: usersMounted } = useUsers()
+  const { users, createUser, updateUser, deleteUser, toggleUserStatus, loadUsers, mounted: usersMounted, loading: usersLoading } = useUsers()
   const [loading, setLoading] = useState(true)
   const [dialogVisible, setDialogVisible] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
@@ -49,9 +49,35 @@ export default function UsersPage() {
         setTimeout(() => router.push('/admin'), 2000)
         return
       }
-      setLoading(false)
+      // Cargar usuarios desde la API cuando la página se monta
+      if (loadUsers && usersMounted) {
+        loadUsers().then(() => {
+          console.log('✅ Usuarios cargados desde la DB:', users.length)
+          setLoading(false)
+        }).catch((error) => {
+          console.error('❌ Error al cargar usuarios:', error)
+          toast.current?.show({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al cargar usuarios desde la base de datos',
+            life: 5000
+          })
+          setLoading(false)
+        })
+      } else if (usersMounted) {
+        // Si ya están cargados, solo actualizar el estado
+        console.log('📋 Usuarios ya cargados:', users.length)
+        setLoading(false)
+      }
     }
-  }, [isAuthenticated, mounted, hasPermission, router])
+  }, [isAuthenticated, mounted, hasPermission, router, loadUsers, usersMounted, users.length])
+  
+  // Efecto adicional para recargar cuando cambien los usuarios del contexto
+  useEffect(() => {
+    if (usersMounted && users.length > 0) {
+      console.log('👥 Usuarios disponibles:', users.map(u => ({ id: u.id, username: u.username, role: u.role })))
+    }
+  }, [users, usersMounted])
 
   if (!mounted || !isAuthenticated || !usersMounted) {
     return (
@@ -361,23 +387,53 @@ export default function UsersPage() {
           </div>
 
           <Card>
+            <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>
+                Total de usuarios: <strong style={{ color: '#1e293b' }}>{users.length}</strong>
+              </p>
+              {users.length === 0 && !loading && (
+                <p style={{ margin: 0, color: '#f59e0b', fontSize: '0.875rem' }}>
+                  ⚠️ No hay usuarios en la base de datos
+                </p>
+              )}
+            </div>
             <DataTable
-              value={users}
-              loading={loading && users.length === 0}
+              value={users || []}
+              loading={loading || usersLoading}
               paginator
               rows={10}
-              emptyMessage="No hay usuarios"
+              emptyMessage={loading || usersLoading ? "Cargando usuarios desde la base de datos..." : "No hay usuarios. Crea uno nuevo para comenzar."}
             >
+              <Column 
+                field="id" 
+                header="ID" 
+                sortable 
+                style={{ width: '80px' }}
+                body={(rowData) => rowData.id || 'N/A'}
+              />
               <Column field="username" header="Usuario" sortable />
               <Column field="role" header="Rol" body={roleBodyTemplate} sortable />
               <Column field="active" header="Estado" body={statusBodyTemplate} />
               <Column
                 field="createdAt"
                 header="Fecha de Creación"
-                body={(rowData) => new Date(rowData.createdAt).toLocaleDateString('es-AR')}
+                body={(rowData) => {
+                  if (!rowData.createdAt) return 'N/A'
+                  try {
+                    return new Date(rowData.createdAt).toLocaleDateString('es-AR', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })
+                  } catch (e) {
+                    return 'N/A'
+                  }
+                }}
                 sortable
               />
-              <Column header="Acciones" body={actionsBodyTemplate} />
+              <Column header="Acciones" body={actionsBodyTemplate} style={{ width: '150px' }} />
             </DataTable>
           </Card>
         </div>
